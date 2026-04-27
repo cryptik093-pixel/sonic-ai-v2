@@ -1,0 +1,22 @@
+WARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.
+ * Running on http://127.0.0.1:5000
+Press CTRL+C to quit
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 436-882-694
+127.0.0.1 - - [20/Mar/2026 17:18:46] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [20/Mar/2026 17:18:46] "GET /health HTTP/1.1" 200 -
+127.0.0.1 - - [20/Mar/2026 19:04:45] "POST /api/upload HTTP/1.1" 201 -
+127.0.0.1 - - [20/Mar/2026 19:05:00] "POST /api/analyze/c0b239473fc04feea73397362a2af52d HTTP/1.1" 200 -
+127.0.0.1 - - [20/Mar/2026 19:05:03] "POST /api/generate/c0b239473fc04feea73397362a2af52d HTTP/1.1" 200 -
+127.0.0.1 - - [20/Mar/2026 19:05:04] "GET /api/status/c0b239473fc04feea73397362a2af52d HTTP/1.1" 200 -
+127.0.0.1 - - [20/Mar/2026 19:05:06] "GET /api/download/c0b239473fc04feea73397362a2af52d/preview HTTP/1.1" 200 -
+127.0.0.1 - - [20/Mar/2026 19:05:07] "GET /api/download/c0b239473fc04feea73397362a2af52d/midi HTTP/1.1" 423 -
+ * Detected change in 'C:\\Users\\david someone\\Desktop\\mkdir_sonic_ai\\sonic_app.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 436-882-694
+ * Detected change in 'C:\\Users\\david someone\\Desktop\\mkdir_sonic_ai\\sonic_app.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 436-882-694
