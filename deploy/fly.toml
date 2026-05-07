@@ -1,0 +1,13 @@
+[app]
+  # change app name if desired
+  app = "sonic-ai-v2"
+  primary = true
+
+[build]
+  image = ""
+
+[env]
+  PORT = "8080"
+
+[deploy]
+  release_command = ""
