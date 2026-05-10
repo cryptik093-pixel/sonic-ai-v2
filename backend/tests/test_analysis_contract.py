@@ -5,7 +5,7 @@ import pytest
 import soundfile as sf
 from fastapi.testclient import TestClient
 
-import app.api.routes_analyze as routes_analyze
+from app.core.config import get_settings
 from app.main import app
 
 client = TestClient(app)
@@ -131,19 +131,21 @@ def test_empty_file_returns_400_json_error() -> None:
 
 
 def test_oversized_file_returns_413_json_error(monkeypatch: pytest.MonkeyPatch) -> None:
-    monkeypatch.setattr(routes_analyze, "MAX_UPLOAD_BYTES", 8)
+    monkeypatch.setenv("SONIC_AI_MAX_UPLOAD_BYTES", "8")
+    get_settings.cache_clear()
 
     response = client.post(
         "/api/v2/analyze",
         files={"file": ("too-large.wav", b"123456789", "audio/wav")},
     )
+    get_settings.cache_clear()
 
     assert response.status_code == 413
     assert response.headers["content-type"].startswith("application/json")
     body = response.json()
     assert body["status"] == "error"
     assert body["error"]["code"] == "file_too_large"
-    assert body["error"]["message"].startswith("Uploaded audio file exceeds the")
+    assert body["error"]["message"] == "Uploaded audio file exceeds the 8 byte limit."
 
 
 def test_corrupt_wav_returns_400_json_error() -> None:

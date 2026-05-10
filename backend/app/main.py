@@ -15,16 +15,11 @@ def create_app() -> FastAPI:
         docs_url="/docs",
         redoc_url="/redoc",
     )
-    # CORS: allow the deployed frontend and local dev hosts
+    cors_origins = settings.allowed_cors_origins()
     app.add_middleware(
         CORSMiddleware,
-        allow_origins=[
-            "https://omega-house.online",
-            "https://www.omega-house.online",
-            "http://localhost:5173",
-            "http://127.0.0.1:5173",
-        ],
-        allow_credentials=True,
+        allow_origins=cors_origins,
+        allow_credentials="*" not in cors_origins,
         allow_methods=["*"],
         allow_headers=["*"],
     )

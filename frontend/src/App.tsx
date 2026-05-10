@@ -23,6 +23,8 @@ const analysisSteps = [
   { label: "Preparing report", detail: "Building the engineering report from measured results." },
 ];
 
+const apiBaseUrl = (import.meta.env.VITE_API_BASE_URL ?? "").replace(/\/$/, "");
+
 function App() {
   const MAX_UPLOAD_BYTES = 200 * 1024 * 1024;
 
@@ -81,7 +83,7 @@ function App() {
     formData.append("target_profile", targetProfile);
 
     try {
-      const response = await fetch("/api/v2/analyze", {
+      const response = await fetch(`${apiBaseUrl}/api/v2/analyze`, {
         method: "POST",
         body: formData,
       });
@@ -280,7 +282,7 @@ function ErrorPanel({ error }: { error: AnalysisError }) {
         <strong>{formatToken(error.code)}</strong>
       </div>
       <p>{error.message}</p>
-      <p className="error-hint">Use a supported audio file under 50 MB, then retry the analysis.</p>
+      <p className="error-hint">Use a supported audio file under 200 MB, then retry the analysis.</p>
     </div>
   );
 }
