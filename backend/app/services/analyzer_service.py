@@ -8,12 +8,7 @@ from app.audio.engineering_report import build_engineering_report
 from app.audio.loader import LoadedAudio, load_audio_file
 from app.audio.metrics import AudioMetrics, calculate_basic_metrics
 from app.audio.reference_profiles import ReferenceComparison, compare_metrics_to_profile
-from app.models.analysis_models import (
-    AnalysisRequest,
-    AnalysisResponse,
-    AnalysisWarning,
-    ReferenceProfile,
-)
+from app.models.analysis_models import AnalysisRequest
 
 ENGINE_VERSION = "sonic-ai-v2-analysis-core-0.1.0"
 
@@ -35,29 +30,9 @@ class AnalysisServiceError(Exception):
 class AnalyzerService:
     """Coordinates audio analysis without faking unavailable DSP work."""
 
-    def analyze(self, request: AnalysisRequest) -> AnalysisResponse:
-        return AnalysisResponse(
-            status="not_implemented",
-            analysis_id=None,
-            message="Audio analysis is not implemented yet. No audio was analyzed.",
-            input=request,
-            metrics=None,
-            reference_profile=ReferenceProfile(
-                id="balanced_streaming",
-                name="Balanced Streaming",
-                description=(
-                    "General-purpose streaming delivery target for balanced modern music releases."
-                ),
-            ),
-            warnings=[
-                AnalysisWarning(
-                    code="analysis_not_implemented",
-                    message=(
-                        "The endpoint contract is active, but deterministic audio analysis "
-                        "has not been built yet."
-                    ),
-                )
-            ],
+    def analyze(self, _request: AnalysisRequest) -> None:
+        raise AnalysisServiceError(
+            "AnalyzerService.analyze is not an active analysis path; use analyze_file_path."
         )
 
     def analyze_loaded_audio(

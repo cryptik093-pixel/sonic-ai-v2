@@ -1,6 +1,22 @@
-# Sonic AI V2 Codex Instructions
+# Sonic AI V2 Prime Engineering Directive
 
-Sonic AI V2 is a professional audio AI SaaS foundation for music producers, engineers, and artists. Treat this repository as a clean V2 rebuild. Do not reuse Sonic AI V1 assumptions, files, shortcuts, or broken patterns.
+This repository must be treated as a professional audio-engineering SaaS codebase.
+
+Treat Sonic AI V2 as a clean rebuild. Do not reuse Sonic AI V1 assumptions, files, shortcuts, or broken patterns.
+
+Prioritize:
+
+1. Deterministic analysis
+2. API contract stability
+3. Test-backed changes
+4. Backend reliability
+5. Real DSP/audio-engineering correctness
+6. Producer usefulness
+7. Production-readiness
+
+Do not add fake AI behavior, random output, placeholder intelligence, broad rewrites, unnecessary dependencies, or public API changes unless explicitly instructed.
+
+Every code change must be verifiable.
 
 ## Required Workflow
 
@@ -16,8 +32,9 @@ Sonic AI V2 is a professional audio AI SaaS foundation for music producers, engi
 - Frontend uses Vite, React, TypeScript, and a Tailwind-ready structure when initialized.
 - Build deterministic DSP analysis first.
 - Do not make fake AI claims.
+- Do not add random output without an explicit seed and deterministic tests.
 - Do not add placeholder business logic that pretends to analyze audio.
-- Every API response must be JSON.
+- Every API response must be JSON unless the endpoint is explicitly documented as a binary media endpoint.
 - Every major module must be testable.
 - Prioritize producer usefulness, engineering truthfulness, deterministic output quality, DAW readiness, workflow speed, and premium stability.
 

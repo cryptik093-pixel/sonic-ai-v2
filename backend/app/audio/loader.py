@@ -32,7 +32,6 @@ def load_audio_file(path: str) -> LoadedAudio:
         raise AudioLoadError(f"Could not load audio file '{audio_path.name}'.") from exc
 
     samples = np.asarray(samples, dtype=np.float32)
-    np.nan_to_num(samples, copy=False, nan=0.0, posinf=0.0, neginf=0.0)
 
     _validate_loaded_audio(samples=samples, sample_rate_hz=sample_rate_hz, filename=audio_path.name)
 
@@ -70,3 +69,5 @@ def _validate_loaded_audio(samples: np.ndarray, sample_rate_hz: int, filename: s
         raise AudioLoadError(f"Audio file '{filename}' contains no audio frames.")
     if samples.shape[1] < 1:
         raise AudioLoadError(f"Audio file '{filename}' contains no audio channels.")
+    if not np.all(np.isfinite(samples)):
+        raise AudioLoadError(f"Audio file '{filename}' contains non-finite sample values.")

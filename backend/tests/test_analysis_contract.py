@@ -165,8 +165,43 @@ def test_corrupt_wav_returns_400_json_error() -> None:
 def test_missing_file_returns_json_error() -> None:
     response = client.post("/api/v2/analyze")
 
-    assert response.status_code in {400, 422}
+    assert response.status_code == 422
     assert response.headers["content-type"].startswith("application/json")
+    assert response.json() == {
+        "status": "error",
+        "error": {
+            "code": "invalid_request",
+            "message": "Request validation failed.",
+        },
+    }
+
+
+def test_unknown_api_route_returns_json_error_envelope() -> None:
+    response = client.get("/api/v2/does-not-exist")
+
+    assert response.status_code == 404
+    assert response.headers["content-type"].startswith("application/json")
+    assert response.json() == {
+        "status": "error",
+        "error": {
+            "code": "not_found",
+            "message": "Not Found",
+        },
+    }
+
+
+def test_wrong_method_returns_json_error_envelope() -> None:
+    response = client.get("/api/v2/analyze")
+
+    assert response.status_code == 405
+    assert response.headers["content-type"].startswith("application/json")
+    assert response.json() == {
+        "status": "error",
+        "error": {
+            "code": "method_not_allowed",
+            "message": "Method Not Allowed",
+        },
+    }
 
 
 def test_analyze_openapi_exposes_valid_target_profile_options() -> None:

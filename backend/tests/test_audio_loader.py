@@ -68,3 +68,19 @@ def test_load_audio_file_wraps_soundfile_errors(tmp_path: Path) -> None:
 
     with pytest.raises(AudioLoadError, match="Could not load audio file 'corrupt.wav'"):
         load_audio_file(str(path))
+
+
+def test_load_audio_file_rejects_non_finite_samples(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    path = tmp_path / "malformed.wav"
+    path.write_bytes(b"placeholder")
+
+    def fake_read(*_args: object, **_kwargs: object) -> tuple[np.ndarray, int]:
+        return np.array([[0.0], [np.nan], [np.inf]], dtype=np.float32), 48_000
+
+    monkeypatch.setattr(sf, "read", fake_read)
+
+    with pytest.raises(AudioLoadError, match="non-finite sample values"):
+        load_audio_file(str(path))

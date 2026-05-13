@@ -48,6 +48,60 @@ def test_prompt_midi_rejects_blank_prompt_with_json_error() -> None:
     }
 
 
+def test_prompt_midi_missing_prompt_returns_json_error_envelope() -> None:
+    response = client.post("/api/v2/prompt-midi", json={"seed": 12})
+
+    assert response.status_code == 422
+    assert response.headers["content-type"].startswith("application/json")
+    assert response.json() == {
+        "status": "error",
+        "error": {
+            "code": "invalid_request",
+            "message": "Request validation failed.",
+        },
+    }
+
+
+def test_prompt_midi_malformed_json_returns_json_error_envelope() -> None:
+    response = client.post(
+        "/api/v2/prompt-midi",
+        content=b'{"prompt":',
+        headers={"Content-Type": "application/json"},
+    )
+
+    assert response.status_code == 422
+    assert response.headers["content-type"].startswith("application/json")
+    assert response.json() == {
+        "status": "error",
+        "error": {
+            "code": "invalid_request",
+            "message": "Request validation failed.",
+        },
+    }
+
+
+def test_prompt_midi_unexpected_generation_failure_returns_json_error(monkeypatch) -> None:
+    def raise_generation_failure(*_args: object, **_kwargs: object) -> None:
+        raise RuntimeError("boom")
+
+    monkeypatch.setattr(
+        "app.api.routes_generation.generate_prompt_midi",
+        raise_generation_failure,
+    )
+
+    response = client.post("/api/v2/prompt-midi", json={"prompt": "dark trap melody"})
+
+    assert response.status_code == 500
+    assert response.headers["content-type"].startswith("application/json")
+    assert response.json() == {
+        "status": "error",
+        "error": {
+            "code": "generation_failed",
+            "message": "Unexpected prompt MIDI generation failure.",
+        },
+    }
+
+
 def test_prompt_midi_openapi_uses_valid_request_examples() -> None:
     schema = app.openapi()
     request_schema = schema["components"]["schemas"]["PromptMIDIRequest"]

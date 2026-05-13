@@ -178,7 +178,7 @@ Oversized file example:
   "status": "error",
   "error": {
     "code": "file_too_large",
-    "message": "Uploaded audio file exceeds the 50 MB limit."
+    "message": "Uploaded audio file exceeds the 200 MB limit."
   }
 }
 ```

@@ -8,7 +8,7 @@ class AnalysisSource(BaseModel):
 
 
 class AnalysisOptions(BaseModel):
-    target_profile: str = Field(default="balanced_streaming", min_length=1)
+    target_profile: str = Field(default="modern_hiphop_master", min_length=1)
 
 
 class AnalysisRequest(BaseModel):

@@ -62,9 +62,22 @@ async def prompt_midi(
             },
         )
 
-    prompt_spec = parse_prompt(prompt)
-    prompt_intent = interpret_prompt(prompt_spec)
-    result = generate_prompt_midi(prompt, seed=request.seed)
+    try:
+        prompt_spec = parse_prompt(prompt)
+        prompt_intent = interpret_prompt(prompt_spec)
+        result = generate_prompt_midi(prompt, seed=request.seed)
+    except Exception:
+        return JSONResponse(
+            status_code=500,
+            content={
+                "status": "error",
+                "error": {
+                    "code": "generation_failed",
+                    "message": "Unexpected prompt MIDI generation failure.",
+                },
+            },
+        )
+
     midi_bytes = result.midi_bytes
 
     if "application/json" in http_request.headers.get("accept", ""):

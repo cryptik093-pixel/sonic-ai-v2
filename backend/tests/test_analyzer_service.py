@@ -8,6 +8,7 @@ import soundfile as sf
 from app.audio.loader import LoadedAudio
 from app.audio.metrics import AudioMetrics
 from app.audio.reference_profiles import ReferenceComparison
+from app.models.analysis_models import AnalysisRequest, AnalysisSource
 from app.services.analyzer_service import (
     ENGINE_VERSION,
     AnalysisServiceError,
@@ -91,6 +92,13 @@ def test_unknown_profile_raises_clear_value_error() -> None:
 def test_invalid_loaded_audio_type_raises_service_error() -> None:
     with pytest.raises(AnalysisServiceError, match="LoadedAudio"):
         AnalyzerService().analyze_loaded_audio("not audio")  # type: ignore[arg-type]
+
+
+def test_legacy_analyze_method_fails_closed() -> None:
+    request = AnalysisRequest(source=AnalysisSource())
+
+    with pytest.raises(AnalysisServiceError, match="not an active analysis path"):
+        AnalyzerService().analyze(request)
 
 
 def test_serialization_returns_plain_dict_values() -> None:
