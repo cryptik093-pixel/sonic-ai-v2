@@ -34,6 +34,31 @@ def test_prompt_midi_returns_json_with_base64_midi_when_requested() -> None:
     assert midi_bytes.startswith(b"MThd")
 
 
+def test_prompt_midi_default_returns_binary_midi_with_headers() -> None:
+    response = client.post(
+        "/api/v2/prompt-midi",
+        json={"prompt": "dorian drill melody at 142 bpm in D", "seed": 12},
+    )
+
+    assert response.status_code == 200
+    assert response.headers["content-type"].startswith("audio/midi")
+    assert response.headers["x-prompt"] == "dorian drill melody at 142 bpm in D"
+    assert response.headers["x-seed"] == "12"
+    assert response.headers["x-key"] == "D"
+    assert response.headers["x-mode"] == "dorian"
+    assert response.content.startswith(b"MThd")
+
+
+def test_prompt_midi_without_seed_is_still_deterministic() -> None:
+    payload = {"prompt": "dark trap melody at 140 bpm in D minor"}
+
+    first = client.post("/api/v2/prompt-midi", json=payload)
+    second = client.post("/api/v2/prompt-midi", json=payload)
+
+    assert first.status_code == 200
+    assert first.content == second.content
+
+
 def test_prompt_midi_rejects_blank_prompt_with_json_error() -> None:
     response = client.post("/api/v2/prompt-midi", json={"prompt": "   "})
 

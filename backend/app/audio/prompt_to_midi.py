@@ -17,7 +17,7 @@ from app.audio.midi_generation import (
 PatternType = Literal["melody", "bassline", "chords", "drums"]
 Density = Literal["sparse", "medium", "dense"]
 Complexity = Literal["simple", "moderate", "complex"]
-EngineScale = Literal["major", "minor"]
+EngineScale = Literal["major", "minor", "dorian", "phrygian", "lydian", "mixolydian", "locrian"]
 
 DEFAULT_TEMPO_BPM = 120
 DEFAULT_KEY = "C"
@@ -277,6 +277,7 @@ def build_midi_plan(parsed: ParsedPrompt) -> PromptMidiPlan:
             tempo_bpm=parsed.tempo_bpm,
             bars=max(1, min(4, bars)),
             velocity=velocity,
+            rhythm_grid=rhythm_grid,
         )
     elif parsed.pattern_type == "bassline":
         engine_config = BasslineConfig(
@@ -284,7 +285,9 @@ def build_midi_plan(parsed: ParsedPrompt) -> PromptMidiPlan:
             bars=bars,
             root_pitch=_root_pitch(parsed, base_octave=36),
             scale=parsed.engine_scale,
+            notes_per_bar=_notes_per_bar_for(parsed),
             velocity=velocity,
+            rhythm_grid=rhythm_grid,
         )
     elif parsed.pattern_type == "chords":
         engine_config = ChordProgressionConfig(
@@ -303,6 +306,8 @@ def build_midi_plan(parsed: ParsedPrompt) -> PromptMidiPlan:
             scale=parsed.engine_scale,
             notes_per_bar=_notes_per_bar_for(parsed),
             velocity=velocity,
+            contour_rule=contour_rule,
+            rhythm_grid=rhythm_grid,
         )
 
     return PromptMidiPlan(
@@ -432,7 +437,9 @@ def _contains_keyword(prompt: str, keyword: str) -> bool:
 
 
 def _engine_scale(mode: str) -> EngineScale:
-    return "major" if mode in {"major", "lydian", "mixolydian"} else "minor"
+    if mode in {"major", "minor", "dorian", "phrygian", "lydian", "mixolydian", "locrian"}:
+        return mode
+    return "minor"
 
 
 def _mood_tempo_default(prompt: str) -> int:

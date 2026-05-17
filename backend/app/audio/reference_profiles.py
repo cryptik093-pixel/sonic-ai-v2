@@ -1,8 +1,10 @@
 from dataclasses import dataclass
+from math import isfinite
+from typing import TYPE_CHECKING
 
-import numpy as np
+if TYPE_CHECKING:
+    from app.audio.metrics import AudioMetrics
 
-from app.audio.metrics import AudioMetrics
 
 SEVERITY_PRIORITY = {"none": 0, "low": 1, "medium": 2, "high": 3}
 
@@ -58,7 +60,7 @@ def list_reference_profiles() -> list[ReferenceProfile]:
 
 
 def compare_metrics_to_profile(
-    metrics: AudioMetrics,
+    metrics: "AudioMetrics",
     profile_id: str = "modern_hiphop_master",
 ) -> ReferenceComparison:
     profile = get_reference_profile(profile_id)
@@ -103,7 +105,7 @@ def _tolerances(metric_name: str) -> tuple[float, float]:
     return 0.05, 0.15
 
 
-def _compare_range(metrics: AudioMetrics, reference_range: ReferenceRange) -> MetricDelta:
+def _compare_range(metrics: "AudioMetrics", reference_range: ReferenceRange) -> MetricDelta:
     measured = _metric_value(metrics, reference_range.metric_name)
     if measured < reference_range.target_min:
         delta_to_range = float(measured - reference_range.target_min)
@@ -131,12 +133,12 @@ def _compare_range(metrics: AudioMetrics, reference_range: ReferenceRange) -> Me
     )
 
 
-def _metric_value(metrics: AudioMetrics, metric_name: str) -> float:
+def _metric_value(metrics: "AudioMetrics", metric_name: str) -> float:
     if not hasattr(metrics, metric_name):
         raise ValueError(f"AudioMetrics is missing required metric: '{metric_name}'.")
 
     value = float(getattr(metrics, metric_name))
-    if not np.isfinite(value):
+    if not isfinite(value):
         raise ValueError(f"AudioMetrics metric '{metric_name}' is not finite.")
     return value
 

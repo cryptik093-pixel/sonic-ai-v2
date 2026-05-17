@@ -9,7 +9,7 @@ Sonic AI V2 helps music producers, engineers, and artists understand audio quali
 - Do not make fake AI claims.
 - Do not pretend to analyze audio when no audio analysis has occurred.
 - Keep outputs explainable and useful to production workflows.
-- Every API response must be JSON.
+- Every API response must be JSON unless the endpoint is explicitly documented as a binary media endpoint.
 - Major modules must be testable in isolation.
 - Prefer stable deterministic DSP metrics before subjective recommendations.
 
@@ -39,7 +39,7 @@ Initial backend domains:
 
 ## Frontend Foundation
 
-The frontend will be initialized in Phase 4 with Vite, React, TypeScript, and a Tailwind-ready structure. The current phase only reserves the folder.
+The frontend uses Vite, React, TypeScript, and a Tailwind-ready structure. It should stay aligned with the deterministic backend contract and handle backend errors without inventing analysis data.
 
 ## Analysis Principles
 

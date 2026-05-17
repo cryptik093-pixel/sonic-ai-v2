@@ -5,18 +5,13 @@ from typing import Annotated
 from fastapi import APIRouter, File, Form, Query, UploadFile
 from fastapi.responses import JSONResponse
 
-from app.audio.loader import SUPPORTED_AUDIO_EXTENSIONS, AudioLoadError
 from app.audio.reference_profiles import REFERENCE_PROFILES
 from app.core.config import get_settings
 from app.models.analysis_models import AnalyzeSuccessResponse
-from app.services.analyzer_service import (
-    AnalysisServiceError,
-    AnalyzerService,
-    analysis_result_to_dict,
-)
 
 router = APIRouter(tags=["analysis"])
 
+SUPPORTED_AUDIO_EXTENSIONS = {".wav", ".wave", ".flac", ".aiff", ".aif", ".mp3", ".ogg"}
 VALID_TARGET_PROFILE_IDS = tuple(REFERENCE_PROFILES.keys())
 TARGET_PROFILE_DESCRIPTION = (
     "Reference profile id. Valid values: "
@@ -81,6 +76,8 @@ async def analyze_audio(
             temp_file.write(upload_bytes)
             temp_path = Path(temp_file.name)
 
+        from app.services.analyzer_service import AnalyzerService, analysis_result_to_dict
+
         service = AnalyzerService()
         result = service.analyze_file_path(temp_path, profile_id=selected_target_profile)
         analysis = analysis_result_to_dict(result)
@@ -96,12 +93,6 @@ async def analyze_audio(
                 f"{_format_byte_limit(settings.upload_limit_bytes)} limit."
             ),
         )
-    except AudioLoadError as exc:
-        return _error_response(
-            status_code=400,
-            code="audio_load_failed",
-            message=f"Uploaded audio could not be loaded: {exc}",
-        )
     except ValueError as exc:
         code = (
             "unknown_target_profile"
@@ -109,9 +100,14 @@ async def analyze_audio(
             else "invalid_request"
         )
         return _error_response(status_code=400, code=code, message=str(exc))
-    except AnalysisServiceError as exc:
-        return _error_response(status_code=400, code="analysis_service_error", message=str(exc))
     except Exception:
+        error_type, error_message = _analysis_error_details()
+        if error_type and error_message:
+            return _error_response(
+                status_code=400,
+                code=error_type,
+                message=error_message,
+            )
         return _error_response(
             status_code=500,
             code="analysis_failed",
@@ -168,3 +164,20 @@ def _format_byte_limit(max_upload_bytes: int) -> str:
     if max_upload_bytes >= 1024 * 1024 and max_upload_bytes % (1024 * 1024) == 0:
         return f"{max_upload_bytes // (1024 * 1024)} MB"
     return f"{max_upload_bytes} byte"
+
+
+def _analysis_error_details() -> tuple[str | None, str | None]:
+    try:
+        from app.audio.loader import AudioLoadError
+        from app.services.analyzer_service import AnalysisServiceError
+    except Exception:
+        return None, None
+
+    import sys
+
+    exc = sys.exc_info()[1]
+    if isinstance(exc, AudioLoadError):
+        return "audio_load_failed", f"Uploaded audio could not be loaded: {exc}"
+    if isinstance(exc, AnalysisServiceError):
+        return "analysis_service_error", str(exc)
+    return None, None

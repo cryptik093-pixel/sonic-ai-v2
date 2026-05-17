@@ -80,7 +80,7 @@ npm run build
 Run from `backend/`:
 
 ```bash
-python -m uvicorn app.main:app --host 0.0.0.0 --port ${PORT:-8000}
+gunicorn -k uvicorn.workers.UvicornWorker app.main:app -b 0.0.0.0:${PORT:-8000}
 ```
 
 ## Health Check URL
@@ -103,7 +103,7 @@ Use `deploy/render.yaml` or configure manually:
 
 - Root directory: `backend`
 - Build command: `python -m pip install --upgrade pip && pip install -e .`
-- Start command: `python -m uvicorn app.main:app --host 0.0.0.0 --port $PORT`
+- Start command: `gunicorn -k uvicorn.workers.UvicornWorker app.main:app -b 0.0.0.0:$PORT`
 - Health check path: `/health`
 - Set `SONIC_AI_CORS_ORIGINS` to the deployed frontend origin.
 - Set `SONIC_AI_MAX_UPLOAD_MB=200`.

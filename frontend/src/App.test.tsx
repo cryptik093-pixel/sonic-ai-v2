@@ -79,6 +79,73 @@ describe("App analysis workflow states", () => {
     expect(screen.getByText("The report was not generated.")).toBeInTheDocument();
   });
 
+  it("shows a contract error when backend error JSON is malformed", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async () => jsonResponse({ status: "error" }, 500)),
+    );
+
+    render(<App />);
+
+    selectAudioFile();
+    fireEvent.click(screen.getByRole("button", { name: "Analyze" }));
+
+    expect(await screen.findByRole("alert")).toHaveTextContent("invalid error response");
+    expect(screen.getByRole("alert")).toHaveTextContent(
+      "did not match the API contract",
+    );
+    expect(screen.queryByText("Engineering Report Dashboard")).not.toBeInTheDocument();
+  });
+
+  it("keeps the report closed when completed JSON is missing analysis data", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async () => jsonResponse({ status: "completed" })),
+    );
+
+    render(<App />);
+
+    selectAudioFile();
+    fireEvent.click(screen.getByRole("button", { name: "Analyze" }));
+
+    expect(await screen.findByRole("alert")).toHaveTextContent("malformed analysis response");
+    expect(screen.getByRole("alert")).toHaveTextContent(
+      "did not include a usable completed analysis payload",
+    );
+    expect(screen.queryByText("Engineering Report Dashboard")).not.toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Try again" })).toBeEnabled();
+  });
+
+  it("shows a retryable error when the backend returns invalid JSON", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async () => ({
+        ok: true,
+        status: 200,
+        headers: new Headers(),
+        redirected: false,
+        statusText: "OK",
+        type: "basic",
+        url: "",
+        clone: vi.fn(),
+        body: null,
+        bodyUsed: false,
+        json: async () => {
+          throw new SyntaxError("Unexpected token");
+        },
+      } as unknown as Response)),
+    );
+
+    render(<App />);
+
+    selectAudioFile();
+    fireEvent.click(screen.getByRole("button", { name: "Analyze" }));
+
+    expect(await screen.findByRole("alert")).toHaveTextContent("invalid json response");
+    expect(screen.getByRole("alert")).toHaveTextContent("The backend response was not valid JSON.");
+    expect(screen.queryByText("Engineering Report Dashboard")).not.toBeInTheDocument();
+  });
+
   it("resets prior results when a new file is selected", async () => {
     vi.stubGlobal(
       "fetch",

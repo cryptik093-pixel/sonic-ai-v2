@@ -87,9 +87,15 @@ function App() {
         method: "POST",
         body: formData,
       });
-      const payload = (await response.json()) as AnalyzeResponse | AnalyzeErrorResponse;
+      const payload = await readAnalyzePayload(response);
       if (!response.ok || payload.status === "error") {
         throw normalizeAnalyzeError(payload, response.status);
+      }
+      if (!isCompletedAnalyzePayload(payload)) {
+        throw new AnalyzeRequestError(
+          "malformed_analysis_response",
+          "The backend returned JSON, but it did not include a usable completed analysis payload.",
+        );
       }
       setAnalysis(payload.analysis);
       setActiveStep(analysisSteps.length - 1);
@@ -329,11 +335,42 @@ function normalizeAnalyzeError(
   statusCode: number,
 ) {
   if (payload.status === "error") {
-    return new AnalyzeRequestError(payload.error.code, payload.error.message);
+    const code = payload.error?.code;
+    const message = payload.error?.message;
+    if (typeof code === "string" && typeof message === "string") {
+      return new AnalyzeRequestError(code, message);
+    }
+    return new AnalyzeRequestError(
+      "invalid_error_response",
+      "The backend returned an error response that did not match the API contract.",
+    );
   }
   return new AnalyzeRequestError(
     "analysis_failed",
     `Analysis failed with HTTP status ${statusCode}.`,
+  );
+}
+
+async function readAnalyzePayload(response: Response): Promise<AnalyzeResponse | AnalyzeErrorResponse> {
+  try {
+    return (await response.json()) as AnalyzeResponse | AnalyzeErrorResponse;
+  } catch {
+    throw new AnalyzeRequestError(
+      "invalid_json_response",
+      "The backend response was not valid JSON.",
+    );
+  }
+}
+
+function isCompletedAnalyzePayload(
+  payload: AnalyzeResponse | AnalyzeErrorResponse,
+): payload is AnalyzeResponse {
+  return (
+    payload.status === "completed" &&
+    typeof payload.analysis === "object" &&
+    payload.analysis !== null &&
+    typeof payload.analysis.engineering_report === "object" &&
+    payload.analysis.engineering_report !== null
   );
 }
 

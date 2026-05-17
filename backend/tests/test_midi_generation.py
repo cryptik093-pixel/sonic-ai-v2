@@ -80,6 +80,50 @@ def test_seeded_drum_pattern_is_deterministic() -> None:
     assert first.patterns[0].ordered_notes == second.patterns[0].ordered_notes
 
 
+def test_drum_pattern_supports_drill_triplet_hat_grid() -> None:
+    engine = MIDIEngine()
+
+    track = engine.generate_drum_pattern(
+        DrumPatternConfig(tempo_bpm=142, bars=1, rhythm_grid="triplet_hat_grid")
+    )
+    notes_by_pitch = _starts_by_pitch(track.patterns[0].ordered_notes)
+
+    assert notes_by_pitch[36] == [0.0, 2.5]
+    assert notes_by_pitch[38] == [1.5, 3.0]
+    assert notes_by_pitch[42][:4] == [0.0, 0.333333, 0.666667, 1.0]
+    assert len(notes_by_pitch[42]) == 12
+
+
+def test_melody_contour_and_rhythm_grid_change_generated_phrase() -> None:
+    engine = MIDIEngine()
+
+    straight = engine.generate_melody(
+        MelodyConfig(
+            tempo_bpm=120,
+            bars=1,
+            notes_per_bar=8,
+            contour_rule="balanced_stepwise_contour",
+        )
+    )
+    offbeat = engine.generate_melody(
+        MelodyConfig(
+            tempo_bpm=120,
+            bars=1,
+            notes_per_bar=8,
+            contour_rule="offbeat_staccato_contour",
+            rhythm_grid="offbeat_eighth_grid",
+        )
+    )
+
+    assert straight.patterns[0].ordered_notes != offbeat.patterns[0].ordered_notes
+    assert [note.start_time for note in offbeat.patterns[0].ordered_notes][:4] == [
+        0.0,
+        0.62,
+        1.0,
+        1.62,
+    ]
+
+
 def test_bassline_and_chords_are_available_internal_generators() -> None:
     engine = MIDIEngine()
 
@@ -110,6 +154,48 @@ def test_bassline_and_chords_respect_bar_length_and_grid() -> None:
     ]
     assert all(note.start_time % 1.0 == 0 for note in chords.patterns[0].ordered_notes)
     assert all(note.start_time + note.duration <= 8.0 for note in chords.patterns[0].ordered_notes)
+
+
+def test_bassline_supports_offbeat_grid() -> None:
+    engine = MIDIEngine()
+
+    bass = engine.generate_bassline(
+        {"tempo_bpm": 110, "bars": 1, "root_pitch": 36, "rhythm_grid": "offbeat_eighth_grid"}
+    )
+
+    assert [note.start_time for note in bass.patterns[0].ordered_notes] == [
+        0.5,
+        1.5,
+        2.5,
+        3.5,
+    ]
+
+
+def test_chord_progression_uses_diatonic_diminished_triads() -> None:
+    engine = MIDIEngine()
+
+    major_vii = engine.generate_chord_progression(
+        {"tempo_bpm": 120, "bars": 1, "root_pitch": 60, "scale": "major", "degrees": (7,)}
+    )
+    minor_ii = engine.generate_chord_progression(
+        {"tempo_bpm": 120, "bars": 1, "root_pitch": 60, "scale": "minor", "degrees": (2,)}
+    )
+
+    assert [note.pitch for note in major_vii.patterns[0].ordered_notes] == [71, 74, 77]
+    assert [note.pitch for note in minor_ii.patterns[0].ordered_notes] == [62, 65, 68]
+
+
+def test_modal_scales_render_distinct_intervals() -> None:
+    engine = MIDIEngine()
+
+    dorian = engine.generate_melody(
+        MelodyConfig(tempo_bpm=120, bars=1, root_pitch=60, scale="dorian"), seed=3
+    )
+    phrygian = engine.generate_melody(
+        MelodyConfig(tempo_bpm=120, bars=1, root_pitch=60, scale="phrygian"), seed=3
+    )
+
+    assert dorian.patterns[0].ordered_notes != phrygian.patterns[0].ordered_notes
 
 
 def test_pattern_stores_notes_in_deterministic_order() -> None:
@@ -152,6 +238,26 @@ def test_tracks_to_midi_bytes_returns_structurally_valid_midi() -> None:
     assert midi_bytes[10:12] == (2).to_bytes(2, "big")
     assert midi_bytes.count(b"MTrk") == 2
     assert midi_bytes.endswith(b"\x00\xff\x2f\x00")
+
+
+def test_render_to_midi_sorts_note_off_before_note_on_at_same_tick() -> None:
+    pattern = Pattern(
+        notes=(
+            Note(pitch=60, velocity=90, start_time=0.0, duration=1.0),
+            Note(pitch=60, velocity=90, start_time=1.0, duration=1.0),
+        ),
+        tempo_bpm=120,
+        length_beats=2.0,
+    )
+    track = Track(name="Overlap Boundary", role="melody", patterns=(pattern,))
+
+    midi_bytes = render_to_midi(track)
+
+    note_off = bytes((0x80, 60, 0))
+    note_on = bytes((0x90, 60, 90))
+    boundary = midi_bytes.index(note_off)
+
+    assert boundary < midi_bytes.index(note_on, boundary)
 
 
 def test_render_to_midi_returns_structurally_valid_midi() -> None:

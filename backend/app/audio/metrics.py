@@ -453,3 +453,5 @@ def _validate_loaded_audio(audio: LoadedAudio) -> None:
         raise ValueError("channels must be positive")
     if audio.samples.shape != (audio.frames, audio.channels):
         raise ValueError("LoadedAudio metadata does not match sample shape")
+    if not np.all(np.isfinite(audio.samples)):
+        raise ValueError("samples must contain only finite values")

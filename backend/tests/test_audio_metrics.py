@@ -86,6 +86,13 @@ def test_invalid_sample_shape_raises_value_error() -> None:
         calculate_basic_metrics(_audio(np.zeros(8, dtype=np.float32)))
 
 
+def test_non_finite_samples_raise_value_error() -> None:
+    samples = np.array([[0.0], [np.nan], [np.inf]], dtype=np.float32)
+
+    with pytest.raises(ValueError, match="samples must contain only finite values"):
+        calculate_basic_metrics(_audio(samples))
+
+
 def test_stereo_signal_calculates_across_all_samples() -> None:
     samples = np.array(
         [

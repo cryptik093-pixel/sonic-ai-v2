@@ -7,10 +7,22 @@ from typing import Literal
 
 TrackRole = Literal["melody", "bass", "chords", "drums"]
 TimeSignature = tuple[int, int]
-type ScaleSpec = Literal["major", "minor"] | tuple[str, Literal["major", "minor"]]
+type ScaleMode = Literal[
+    "major", "minor", "dorian", "phrygian", "lydian", "mixolydian", "locrian"
+]
+type ScaleSpec = ScaleMode | tuple[str, ScaleMode]
 
 MAJOR_SCALE_INTERVALS = (0, 2, 4, 5, 7, 9, 11)
 MINOR_SCALE_INTERVALS = (0, 2, 3, 5, 7, 8, 10)
+SCALE_INTERVALS = {
+    "major": MAJOR_SCALE_INTERVALS,
+    "minor": MINOR_SCALE_INTERVALS,
+    "dorian": (0, 2, 3, 5, 7, 9, 10),
+    "phrygian": (0, 1, 3, 5, 7, 8, 10),
+    "lydian": (0, 2, 4, 6, 7, 9, 11),
+    "mixolydian": (0, 2, 4, 5, 7, 9, 10),
+    "locrian": (0, 1, 3, 5, 6, 8, 10),
+}
 DEFAULT_CHORD_DEGREES = (1, 5, 6, 4)
 DRUM_PITCHES = {
     "kick": 36,
@@ -122,6 +134,7 @@ class DrumPatternConfig:
     bars: int = 1
     velocity: int = 96
     channel: int = 9
+    rhythm_grid: str = "basic_four_four_grid"
 
 
 @dataclass(frozen=True)
@@ -133,6 +146,7 @@ class BasslineConfig:
     notes_per_bar: int = 4
     velocity: int = 96
     channel: int = 1
+    rhythm_grid: str = "straight_eighth_grid"
 
 
 @dataclass(frozen=True)
@@ -171,14 +185,14 @@ class MIDIEngine:
         rng = _rng(seed)
         scale = _scale_intervals(cfg.scale)
         root_pitch = _root_pitch_for_scale(cfg.root_pitch, cfg.scale)
-        step_beats = 4.0 / cfg.notes_per_bar
-        total_steps = cfg.bars * cfg.notes_per_bar
+        start_times = _melody_start_times(cfg.bars, cfg.notes_per_bar, cfg.rhythm_grid)
+        note_duration = _melody_note_duration(start_times, cfg.bars * 4.0)
         degree_index = 0
         notes: list[Note] = []
 
-        for step in range(total_steps):
+        for step, start_time in enumerate(start_times):
             if rng is None:
-                degree_index += _deterministic_melody_motion(step)
+                degree_index += _deterministic_melody_motion(step, cfg.contour_rule)
             else:
                 degree_index += rng.choice((-1, 1, 1, 2 if step % 7 == 0 else 1))
 
@@ -189,8 +203,8 @@ class MIDIEngine:
                 Note(
                     pitch=_clamp_midi(pitch),
                     velocity=cfg.velocity,
-                    start_time=round(step * step_beats, 6),
-                    duration=round(step_beats * 0.9, 6),
+                    start_time=start_time,
+                    duration=note_duration,
                     channel=cfg.channel,
                 )
             )
@@ -208,17 +222,16 @@ class MIDIEngine:
 
         for bar in range(cfg.bars):
             bar_start = bar * 4.0
-            for beat in (0.0, 2.0):
+            for beat in _kick_beats_for_grid(cfg.rhythm_grid):
                 notes.append(_drum_note("kick", bar_start + beat, cfg.velocity, cfg.channel))
-            for beat in (1.0, 3.0):
+            for beat in _snare_beats_for_grid(cfg.rhythm_grid):
                 notes.append(_drum_note("snare", bar_start + beat, cfg.velocity, cfg.channel))
-            for step in range(8):
+            hat_grid = _hat_beats_for_grid(cfg.rhythm_grid)
+            for step, beat in enumerate(hat_grid):
                 velocity = cfg.velocity - 18
-                if rng is not None and step in {1, 3, 5, 7}:
+                if rng is not None and step % 2 == 1:
                     velocity += rng.choice((0, 4, 8))
-                notes.append(
-                    _drum_note("closed_hat", bar_start + step * 0.5, velocity, cfg.channel)
-                )
+                notes.append(_drum_note("closed_hat", bar_start + beat, velocity, cfg.channel))
 
         pattern = Pattern(notes=notes, tempo_bpm=cfg.tempo_bpm, length_beats=cfg.bars * 4.0)
         return Track(name="Generated Drums", role="drums", patterns=(pattern,))
@@ -230,6 +243,8 @@ class MIDIEngine:
     ) -> Track:
         cfg = _coerce_config(config, BasslineConfig)
         _validate_common_grid(cfg.tempo_bpm, cfg.bars)
+        if cfg.notes_per_bar <= 0:
+            raise ValueError("notes_per_bar must be positive.")
         rng = _rng(seed)
         scale = _scale_intervals(cfg.scale)
         root_pitch = _root_pitch_for_scale(cfg.root_pitch, cfg.scale)
@@ -237,20 +252,22 @@ class MIDIEngine:
 
         for bar in range(cfg.bars):
             bar_start = bar * 4.0
-            walk_degree = 4 if rng is None else rng.choice((0, 2, 4))
-            notes.extend(
-                [
-                    Note(root_pitch, cfg.velocity, bar_start, 1.5, cfg.channel),
-                    Note(
-                        root_pitch + scale[walk_degree],
-                        cfg.velocity - 8,
-                        bar_start + 2.0,
-                        0.75,
-                        cfg.channel,
-                    ),
-                    Note(root_pitch + 12, cfg.velocity - 4, bar_start + 3.0, 0.75, cfg.channel),
-                ]
-            )
+            starts = _bass_starts_for_grid(cfg.rhythm_grid, cfg.notes_per_bar)
+            for step, beat in enumerate(starts):
+                if step == 0:
+                    degree = 0
+                elif step == len(starts) - 1:
+                    degree = len(scale)
+                elif rng is None:
+                    degree = 4
+                else:
+                    degree = rng.choice((0, 2, 4))
+                octave, scale_degree = divmod(degree, len(scale))
+                pitch = root_pitch + (12 * octave) + scale[scale_degree]
+                velocity = cfg.velocity if step == 0 else cfg.velocity - 8
+                notes.append(
+                    Note(_clamp_midi(pitch), velocity, bar_start + beat, 0.75, cfg.channel)
+                )
 
         pattern = Pattern(notes=notes, tempo_bpm=cfg.tempo_bpm, length_beats=cfg.bars * 4.0)
         return Track(name="Generated Bass", role="bass", patterns=(pattern,))
@@ -323,20 +340,15 @@ def _rng(seed: int | None) -> Random | None:
     return Random(seed) if seed is not None else None
 
 
-def _scale_mode(scale: ScaleSpec | str) -> Literal["major", "minor"]:
+def _scale_mode(scale: ScaleSpec | str) -> str:
     mode = scale[1] if isinstance(scale, tuple) else scale
-    if mode == "major":
-        return "major"
-    if mode == "minor":
-        return "minor"
-    raise ValueError("scale must be 'major' or 'minor'.")
+    if mode in SCALE_INTERVALS:
+        return mode
+    raise ValueError("scale must be a supported major, minor, or modal scale.")
 
 
 def _scale_intervals(scale: ScaleSpec | str) -> tuple[int, ...]:
-    mode = _scale_mode(scale)
-    if mode == "major":
-        return MAJOR_SCALE_INTERVALS
-    return MINOR_SCALE_INTERVALS
+    return SCALE_INTERVALS[_scale_mode(scale)]
 
 
 def _root_pitch_for_scale(root_pitch: int, scale: ScaleSpec | str) -> int:
@@ -370,17 +382,55 @@ def _key_to_pitch_class(key: str) -> int:
     return pitch_classes.get(key.lower(), 0)
 
 
-def _triad_intervals(scale: str, degree: int) -> tuple[int, int, int]:
-    if _scale_mode(scale) == "major":
-        minor_degrees = {2, 3, 6}
-    else:
-        minor_degrees = {1, 4, 5}
-    third = 3 if degree in minor_degrees else 4
-    fifth = 7
-    return (0, third, fifth)
+def _triad_intervals(scale: ScaleSpec | str, degree: int) -> tuple[int, int, int]:
+    intervals = _scale_intervals(scale)
+    root_index = degree - 1
+    root = intervals[root_index]
+    third = intervals[(root_index + 2) % len(intervals)]
+    fifth = intervals[(root_index + 4) % len(intervals)]
+    if root_index + 2 >= len(intervals):
+        third += 12
+    if root_index + 4 >= len(intervals):
+        fifth += 12
+    return (0, third - root, fifth - root)
 
 
-def _deterministic_melody_motion(step: int) -> int:
+def _melody_start_times(bars: int, notes_per_bar: int, rhythm_grid: str) -> tuple[float, ...]:
+    total_steps = bars * notes_per_bar
+    step_beats = 4.0 / notes_per_bar
+    starts = []
+    for step in range(total_steps):
+        start = step * step_beats
+        if rhythm_grid in {"offbeat_eighth_grid", "laid_back_eighth_grid"} and step % 2 == 1:
+            start += min(0.12, step_beats * 0.25)
+        elif rhythm_grid == "swing_sixteenth_grid" and step % 2 == 1:
+            start += min(0.08, step_beats * 0.2)
+        starts.append(round(min(start, bars * 4.0 - 0.01), 6))
+    return tuple(starts)
+
+
+def _melody_note_duration(start_times: tuple[float, ...], total_beats: float) -> float:
+    if len(start_times) < 2:
+        return round(total_beats * 0.9, 6)
+    shortest_gap = min(
+        later - earlier for earlier, later in zip(start_times, start_times[1:], strict=False)
+    )
+    return round(max(0.05, shortest_gap * 0.9), 6)
+
+
+def _deterministic_melody_motion(step: int, contour_rule: str) -> int:
+    if contour_rule == "low_narrow_minor_contour":
+        return 0 if step % 4 == 0 else (1 if step % 3 == 0 else -1)
+    if contour_rule == "wide_leap_slow_contour":
+        return 2 if step % 4 == 0 else (-1 if step % 2 == 0 else 0)
+    if contour_rule == "accented_forward_contour":
+        return 2 if step % 3 == 0 else 1
+    if contour_rule == "slow_sustained_upper_contour":
+        return 1 if step % 4 == 0 else 0
+    if contour_rule == "offbeat_staccato_contour":
+        return 1 if step % 2 == 1 else -1
+    if contour_rule == "upper_major_contour":
+        return 1 if step % 3 else 2
     if step % 8 == 0:
         return 0
     if step % 7 == 0:
@@ -398,6 +448,40 @@ def _drum_note(name: str, start_time: float, velocity: int, channel: int) -> Not
         duration=0.25,
         channel=channel,
     )
+
+
+def _bass_starts_for_grid(rhythm_grid: str, notes_per_bar: int) -> tuple[float, ...]:
+    if rhythm_grid == "offbeat_eighth_grid":
+        starts = (0.5, 1.5, 2.5, 3.5)
+    elif rhythm_grid == "triplet_hat_grid":
+        starts = (0.0, 1.333333, 2.5, 3.333333)
+    else:
+        starts = (0.0, 2.0, 3.0)
+    return starts[: max(1, min(notes_per_bar, len(starts)))]
+
+
+def _kick_beats_for_grid(rhythm_grid: str) -> tuple[float, ...]:
+    if rhythm_grid == "quarter_kick_grid":
+        return (0.0, 1.0, 2.0, 3.0)
+    if rhythm_grid == "triplet_hat_grid":
+        return (0.0, 2.5)
+    if rhythm_grid == "swing_sixteenth_grid":
+        return (0.0, 2.0, 2.75)
+    return (0.0, 2.0)
+
+
+def _snare_beats_for_grid(rhythm_grid: str) -> tuple[float, ...]:
+    if rhythm_grid == "triplet_hat_grid":
+        return (1.5, 3.0)
+    return (1.0, 3.0)
+
+
+def _hat_beats_for_grid(rhythm_grid: str) -> tuple[float, ...]:
+    if rhythm_grid == "triplet_hat_grid":
+        return tuple(round(step / 3, 6) for step in range(12))
+    if rhythm_grid == "swing_sixteenth_grid":
+        return (0.0, 0.58, 1.0, 1.58, 2.0, 2.58, 3.0, 3.58)
+    return tuple(step * 0.5 for step in range(8))
 
 
 def _validate_common_grid(tempo_bpm: int, bars: int) -> None:
@@ -449,8 +533,8 @@ def _note_track(track: Track, ticks_per_beat: int) -> bytes:
         for note in pattern.ordered_notes:
             start_tick = round((absolute_offset + note.start_time) * ticks_per_beat)
             end_tick = round((absolute_offset + note.start_time + note.duration) * ticks_per_beat)
-            events.append((start_tick, 0, bytes((0x90 | note.channel, note.pitch, note.velocity))))
-            events.append((end_tick, 1, bytes((0x80 | note.channel, note.pitch, 0))))
+            events.append((start_tick, 1, bytes((0x90 | note.channel, note.pitch, note.velocity))))
+            events.append((end_tick, 0, bytes((0x80 | note.channel, note.pitch, 0))))
         absolute_offset += pattern.total_beats
 
     events.sort(key=lambda event: (event[0], event[1]))

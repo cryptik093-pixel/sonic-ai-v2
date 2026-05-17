@@ -29,6 +29,7 @@ def test_parse_uk_drill_drums_uses_drill_rhythm_defaults() -> None:
     assert parsed.tempo_bpm == 142
     assert isinstance(plan.engine_config, DrumPatternConfig)
     assert plan.rhythm_grid == "triplet_hat_grid"
+    assert plan.engine_config.rhythm_grid == "triplet_hat_grid"
 
 
 def test_parse_emotional_chords_maps_to_emotional_harmony() -> None:
@@ -76,6 +77,7 @@ def test_genre_mapping_trap_and_drill_set_distinct_rhythm_grids() -> None:
     assert drill.rhythm_grid == "triplet_hat_grid"
     assert isinstance(drill.engine_config, MelodyConfig)
     assert drill.engine_config.notes_per_bar == 12
+    assert drill.engine_config.rhythm_grid == "triplet_hat_grid"
 
 
 def test_density_mapping_changes_melody_note_count() -> None:
@@ -97,7 +99,18 @@ def test_bouncy_bassline_maps_to_bass_config_and_offbeat_grid() -> None:
     assert parsed.primary_mood == "bouncy"
     assert isinstance(plan.engine_config, BasslineConfig)
     assert plan.engine_config.root_pitch == 43
+    assert plan.engine_config.rhythm_grid == "offbeat_eighth_grid"
     assert plan.rhythm_grid == "offbeat_eighth_grid"
+
+
+def test_modal_prompt_preserves_modal_engine_scale() -> None:
+    parsed = parse_prompt("dorian melody in D")
+    plan = build_midi_plan(parsed)
+
+    assert parsed.mode == "dorian"
+    assert parsed.engine_scale == "dorian"
+    assert isinstance(plan.engine_config, MelodyConfig)
+    assert plan.engine_config.scale == "dorian"
 
 
 def test_dreamy_pad_progression_defaults_to_90_bpm_chords() -> None:
@@ -118,6 +131,21 @@ def test_same_prompt_and_seed_render_identical_midi_bytes() -> None:
 
     assert first.midi_bytes == second.midi_bytes
     assert first.tracks == second.tracks
+
+
+def test_prompt_rhythm_and_contour_intent_affect_rendered_notes() -> None:
+    drill = generate_prompt_midi("advanced drill melody at 142 bpm", seed=7)
+    dark = generate_prompt_midi("dark trap melody at 142 bpm", seed=7)
+
+    drill_notes = drill.tracks[0].patterns[0].ordered_notes
+    dark_notes = dark.tracks[0].patterns[0].ordered_notes
+
+    assert drill.plan.rhythm_grid == "triplet_hat_grid"
+    assert drill.plan.contour_rule == "balanced_stepwise_contour"
+    assert dark.plan.rhythm_grid == "eighth_hat_grid"
+    assert dark.plan.contour_rule == "low_narrow_minor_contour"
+    assert [note.start_time for note in drill_notes] != [note.start_time for note in dark_notes]
+    assert drill_notes != dark_notes
 
 
 def test_different_prompts_produce_structurally_different_patterns() -> None:
