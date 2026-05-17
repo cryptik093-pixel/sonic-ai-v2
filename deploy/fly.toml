@@ -1,0 +1,33 @@
+[app]
+  # change app name if desired
+  app = "sonic-ai-v2"
+  primary = true
+
+[build]
+  dockerfile = "deploy/fly.Dockerfile"
+
+[env]
+  PORT = "8080"
+  SONIC_AI_ENVIRONMENT = "production"
+  SONIC_AI_MAX_UPLOAD_BYTES = "209715200"
+
+[deploy]
+  release_command = ""
+
+[[services]]
+  internal_port = 8080
+  protocol = "tcp"
+
+  [[services.ports]]
+    handlers = ["http"]
+    port = 80
+
+  [[services.ports]]
+    handlers = ["tls", "http"]
+    port = 443
+
+  [[services.http_checks]]
+    interval = "15s"
+    timeout = "2s"
+    method = "get"
+    path = "/health"
