@@ -1,0 +1,8 @@
+{
+  "name": "sonic-ai-v2",
+  "private": true,
+  "scripts": {
+    "build": "npm --prefix frontend run build",
+    "test": "npm --prefix frontend run test"
+  }
+}
