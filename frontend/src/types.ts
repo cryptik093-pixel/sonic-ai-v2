@@ -84,3 +84,44 @@ export interface AnalyzeErrorResponse {
     message: string;
   };
 }
+
+export interface ApiErrorEnvelope {
+  status: "error";
+  error: {
+    code: string;
+    message: string;
+  };
+}
+
+export interface PromptMidiRequest {
+  prompt: string;
+  seed?: number | null;
+}
+
+export interface PromptMidiMetadata {
+  raw: string;
+  seed: number | null;
+  tempo_bpm?: number;
+  key?: string;
+  mode?: string;
+  pattern_type?: string;
+  density?: string;
+  complexity?: string;
+  mood_modifiers?: string[];
+  primary_mood?: string;
+  rhythm_style?: string;
+  rhythm_grid?: string;
+  contour_rule?: string;
+  chord_degrees?: number[];
+}
+
+export interface PromptMidiJsonResponse {
+  status: "completed";
+  prompt: PromptMidiMetadata;
+  midi: {
+    media_type: "audio/midi";
+    encoding: "base64";
+    byte_length: number;
+    data_base64: string;
+  };
+}

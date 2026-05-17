@@ -6,3 +6,47 @@
   [32m[1mVITE[22m v7.3.2[39m  [2mready in [0m[1m4471[22m[2m[0m ms[22m
 
   [32m➜[39m  [1mLocal[22m:   [36mhttp://127.0.0.1:[1m5174[22m/[39m
+[2m2:24:19 AM[22m [36m[1m[vite][22m[39m changed tsconfig file detected: C:/Users/david someone/Desktop/sonic_ai_v2/sonic_ai_v2/frontend/tsconfig.node.json - Clearing cache and forcing full-reload to ensure TypeScript is compiled with updated config values.
+[2m2:24:20 AM[22m [36m[1m[vite][22m[39m [32mvite.config.ts changed, restarting server...[39m
+[2m2:24:29 AM[22m [36m[1m[vite][22m[39m server restarted.
+[2m3:10:34 AM[22m [36m[1m[vite][22m[39m changed tsconfig file detected: C:/Users/david someone/Desktop/sonic_ai_v2/sonic_ai_v2/frontend/tsconfig.json - Clearing cache and forcing full-reload to ensure TypeScript is compiled with updated config values.
+[2m3:10:34 AM[22m [36m[1m[vite][22m[39m [32mvite.config.js changed, restarting server...[39m
+[2m3:10:34 AM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mpage reload [39m[2mindex.html[22m
+[2m3:10:35 AM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m Re-optimizing dependencies because vite config has changed
+[2m3:10:36 AM[22m [36m[1m[vite][22m[39m server restarted.
+[2m3:12:02 AM[22m [36m[1m[vite][22m[39m [32m.env.local changed, restarting server...[39m
+[2m3:12:02 AM[22m [36m[1m[vite][22m[39m server restarted.
+[2m3:49:42 AM[22m [36m[1m[vite][22m[39m changed tsconfig file detected: C:/Users/david someone/Desktop/sonic_ai_v2/sonic_ai_v2/frontend/tsconfig.json - Clearing cache and forcing full-reload to ensure TypeScript is compiled with updated config values.
+[2m3:49:42 AM[22m [36m[1m[vite][22m[39m changed tsconfig file detected: C:/Users/david someone/Desktop/sonic_ai_v2/sonic_ai_v2/frontend/tsconfig.json - Clearing cache and forcing full-reload to ensure TypeScript is compiled with updated config values.
+[2m3:51:53 AM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mpage reload [39m[2m.next/server/app/agent.html[22m
+[2m3:51:53 AM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mpage reload [39m[2m.next/server/app/dashboard.html[22m
+[2m3:51:53 AM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mpage reload [39m[2m.next/server/app/midi.html[22m
+[2m3:51:53 AM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mpage reload [39m[2m.next/server/app/_global-error.html[22m
+[2m3:51:53 AM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mpage reload [39m[2m.next/server/app/_not-found.html[22m
+[2m3:51:53 AM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mpage reload [39m[2m.next/server/app/index.html[22m
+[2m3:51:55 AM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mpage reload [39m[2m.next/server/pages/404.html[22m
+[2m3:51:55 AM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mpage reload [39m[2m.next/server/pages/500.html[22m
+[2m3:53:14 AM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mpage reload [39m[2m.next/server/app/agent.html[22m
+[2m3:53:14 AM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mpage reload [39m[2m.next/server/app/dashboard.html[22m
+[2m3:53:14 AM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mpage reload [39m[2m.next/server/app/midi.html[22m
+[2m3:53:14 AM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mpage reload [39m[2m.next/server/app/_global-error.html[22m
+[2m3:53:14 AM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mpage reload [39m[2m.next/server/app/_not-found.html[22m
+[2m3:53:14 AM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mpage reload [39m[2m.next/server/app/index.html[22m
+[2m3:53:16 AM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mpage reload [39m[2m.next/server/pages/404.html[22m
+[2m3:53:16 AM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mpage reload [39m[2m.next/server/pages/500.html[22m
+[2m3:58:54 AM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mpage reload [39m[2m.next/server/app/agent.html[22m
+[2m3:58:55 AM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mpage reload [39m[2m.next/server/app/dashboard.html[22m
+[2m3:58:55 AM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mpage reload [39m[2m.next/server/app/_global-error.html[22m
+[2m3:58:55 AM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mpage reload [39m[2m.next/server/app/_not-found.html[22m
+[2m3:58:55 AM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mpage reload [39m[2m.next/server/app/index.html[22m
+[2m3:58:56 AM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mpage reload [39m[2m.next/server/app/midi.html[22m
+[2m3:58:58 AM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mpage reload [39m[2m.next/server/pages/404.html[22m
+[2m3:58:58 AM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mpage reload [39m[2m.next/server/pages/500.html[22m
+[2m4:03:13 AM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mpage reload [39m[2m.next/server/app/agent.html[22m
+[2m4:03:13 AM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mpage reload [39m[2m.next/server/app/dashboard.html[22m
+[2m4:03:13 AM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mpage reload [39m[2m.next/server/app/index.html[22m
+[2m4:03:13 AM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mpage reload [39m[2m.next/server/app/midi.html[22m
+[2m4:03:13 AM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mpage reload [39m[2m.next/server/app/_global-error.html[22m
+[2m4:03:13 AM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mpage reload [39m[2m.next/server/app/_not-found.html[22m
+[2m4:03:15 AM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mpage reload [39m[2m.next/server/pages/404.html[22m
+[2m4:03:15 AM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mpage reload [39m[2m.next/server/pages/500.html[22m

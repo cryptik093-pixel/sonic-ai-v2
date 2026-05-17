@@ -213,6 +213,9 @@ Generates deterministic MIDI from a text prompt using the local rule-based MIDI 
 
 Request content type: `application/json`
 
+Form-compatible clients may send `application/x-www-form-urlencoded` with `prompt`,
+optional `seed`, and optional `format`.
+
 Default success media type: `audio/midi`
 
 Set `Accept: application/json` to receive MIDI bytes as base64 JSON plus the interpreted prompt metadata.
@@ -276,3 +279,28 @@ Error response:
   }
 }
 ```
+
+## POST `/api/v2/prompt-midi/download`
+
+Generates deterministic MIDI from a text prompt and always returns a downloadable
+MIDI file on success.
+
+Request content type: `application/json` or `application/x-www-form-urlencoded`
+
+Success media type: `audio/midi`
+
+Request fields:
+
+- `prompt`: required string
+- `seed`: optional integer
+
+Success response headers:
+
+- `Content-Disposition`
+- `Content-Length`
+- `X-Prompt`
+- `X-Seed`
+- `X-Key`
+- `X-Mode`
+
+Error responses use the same JSON envelope as `POST /api/v2/prompt-midi`.

@@ -1,9 +1,9 @@
 # Sonic AI V2 Frontend
 
-Phase 10 initializes the Vite, React, and TypeScript frontend for the core product loop:
+Next.js App Router frontend for the core product loop:
 
 ```text
-Upload audio -> Analyze -> Engineering Report Dashboard
+Upload audio -> Analyze -> Engineering Report -> Mastering Direction -> MIDI Export
 ```
 
 ## Local Development
@@ -15,7 +15,7 @@ npm install
 npm run dev
 ```
 
-The Vite dev server proxies `/api` requests to `http://127.0.0.1:8000`, so run the backend separately before uploading audio through the browser UI.
+Set `NEXT_PUBLIC_API_BASE_URL` in `.env.local` to the FastAPI backend origin before using browser workflows.
 
 ## Quality Checks
 

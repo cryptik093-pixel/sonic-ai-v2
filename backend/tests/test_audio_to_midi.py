@@ -97,6 +97,22 @@ def test_audio_to_midi_render_returns_valid_standard_midi_bytes() -> None:
     assert result.midi_bytes == render_to_midi(result.tracks)
 
 
+def test_drum_only_upload_adds_musical_support_tracks_when_enabled() -> None:
+    audio = _audio(_drum_fixture(sample_rate_hz=16_000), sample_rate_hz=16_000)
+
+    result = extract_audio_to_midi(audio, include_bass=True, include_chords=True)
+
+    roles = [track.role for track in result.tracks]
+    assert "drums" in roles
+    assert "bass" in roles
+    assert "chords" in roles
+    assert all(
+        track.patterns[0].ordered_notes
+        for track in result.tracks
+        if track.role in {"drums", "bass", "chords"}
+    )
+
+
 def _audio(samples: np.ndarray, sample_rate_hz: int = 16_000) -> LoadedAudio:
     samples = np.asarray(samples, dtype=np.float32)
     frames = int(samples.shape[0])

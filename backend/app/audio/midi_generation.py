@@ -7,6 +7,7 @@ from typing import Literal
 
 TrackRole = Literal["melody", "bass", "chords", "drums"]
 TimeSignature = tuple[int, int]
+Seed = int | None
 type ScaleMode = Literal[
     "major", "minor", "dorian", "phrygian", "lydian", "mixolydian", "locrian"
 ]
@@ -160,6 +161,19 @@ class ChordProgressionConfig:
     degrees: Sequence[int] = DEFAULT_CHORD_DEGREES
 
 
+@dataclass(frozen=True)
+class ArrangementConfig:
+    tempo_bpm: int = 120
+    bars: int = 4
+    root_pitch: int = 60
+    scale: ScaleSpec = "minor"
+    density: Literal["sparse", "medium", "dense"] = "medium"
+    velocity: int = 92
+    rhythm_grid: str = "straight_eighth_grid"
+    contour_rule: str = "balanced_stepwise_contour"
+    chord_degrees: Sequence[int] = DEFAULT_CHORD_DEGREES
+
+
 class MIDIEngine:
     """Small deterministic MIDI generation core for internal Sonic AI tools.
 
@@ -295,6 +309,73 @@ class MIDIEngine:
         pattern = Pattern(notes=notes, tempo_bpm=cfg.tempo_bpm, length_beats=cfg.bars * 4.0)
         return Track(name="Generated Chords", role="chords", patterns=(pattern,))
 
+    def generate_arrangement(
+        self,
+        config: ArrangementConfig | Mapping[str, object],
+        seed: Seed = None,
+    ) -> tuple[Track, Track, Track, Track]:
+        """Generate a deterministic multi-track musical idea for DAW export.
+
+        This is still rule-based, but it avoids the weak one-lane output that
+        makes a MIDI file feel unfinished. Same config plus same seed produces
+        the same full arrangement.
+        """
+
+        cfg = _coerce_config(config, ArrangementConfig)
+        _validate_common_grid(cfg.tempo_bpm, cfg.bars)
+        root = _root_pitch_for_scale(cfg.root_pitch, cfg.scale)
+        notes_per_bar = _arrangement_notes_per_bar(cfg.density)
+        drum_velocity = _clamp_velocity(cfg.velocity + 6)
+        bass_velocity = _clamp_velocity(cfg.velocity + 2)
+        chord_velocity = _clamp_velocity(cfg.velocity - 10)
+
+        melody = self.generate_melody(
+            MelodyConfig(
+                tempo_bpm=cfg.tempo_bpm,
+                bars=cfg.bars,
+                root_pitch=max(48, min(84, root)),
+                scale=cfg.scale,
+                notes_per_bar=notes_per_bar,
+                velocity=_clamp_velocity(cfg.velocity),
+                contour_rule=cfg.contour_rule,
+                rhythm_grid=cfg.rhythm_grid,
+            ),
+            seed=_seed_offset(seed, 11),
+        )
+        bass = self.generate_bassline(
+            BasslineConfig(
+                tempo_bpm=cfg.tempo_bpm,
+                bars=cfg.bars,
+                root_pitch=max(24, min(48, root - 24)),
+                scale=cfg.scale,
+                notes_per_bar=max(3, notes_per_bar // 2),
+                velocity=bass_velocity,
+                rhythm_grid=cfg.rhythm_grid,
+            ),
+            seed=_seed_offset(seed, 23),
+        )
+        chords = self.generate_chord_progression(
+            ChordProgressionConfig(
+                tempo_bpm=cfg.tempo_bpm,
+                bars=cfg.bars,
+                root_pitch=max(36, min(60, root - 12)),
+                scale=cfg.scale,
+                velocity=chord_velocity,
+                degrees=cfg.chord_degrees,
+            ),
+            seed=_seed_offset(seed, 37),
+        )
+        drums = self.generate_drum_pattern(
+            DrumPatternConfig(
+                tempo_bpm=cfg.tempo_bpm,
+                bars=cfg.bars,
+                velocity=drum_velocity,
+                rhythm_grid=cfg.rhythm_grid,
+            ),
+            seed=_seed_offset(seed, 41),
+        )
+        return (melody, bass, chords, drums)
+
 
 def render_to_midi(tracks: Track | Sequence[Track], ticks_per_beat: int = 480) -> bytes:
     """Convert internal tracks to a Standard MIDI File byte stream.
@@ -338,6 +419,10 @@ def _coerce_config[T](config: T | Mapping[str, object], config_type: type[T]) ->
 
 def _rng(seed: int | None) -> Random | None:
     return Random(seed) if seed is not None else None
+
+
+def _seed_offset(seed: Seed, offset: int) -> Seed:
+    return None if seed is None else seed + offset
 
 
 def _scale_mode(scale: ScaleSpec | str) -> str:
@@ -403,6 +488,8 @@ def _melody_start_times(bars: int, notes_per_bar: int, rhythm_grid: str) -> tupl
         start = step * step_beats
         if rhythm_grid in {"offbeat_eighth_grid", "laid_back_eighth_grid"} and step % 2 == 1:
             start += min(0.12, step_beats * 0.25)
+        elif rhythm_grid == "eighth_hat_grid" and step % 4 == 3:
+            start += min(0.06, step_beats * 0.18)
         elif rhythm_grid == "swing_sixteenth_grid" and step % 2 == 1:
             start += min(0.08, step_beats * 0.2)
         starts.append(round(min(start, bars * 4.0 - 0.01), 6))
@@ -453,6 +540,8 @@ def _drum_note(name: str, start_time: float, velocity: int, channel: int) -> Not
 def _bass_starts_for_grid(rhythm_grid: str, notes_per_bar: int) -> tuple[float, ...]:
     if rhythm_grid == "offbeat_eighth_grid":
         starts = (0.5, 1.5, 2.5, 3.5)
+    elif rhythm_grid == "eighth_hat_grid":
+        starts = (0.0, 1.5, 2.5, 3.5)
     elif rhythm_grid == "triplet_hat_grid":
         starts = (0.0, 1.333333, 2.5, 3.333333)
     else:
@@ -463,6 +552,8 @@ def _bass_starts_for_grid(rhythm_grid: str, notes_per_bar: int) -> tuple[float, 
 def _kick_beats_for_grid(rhythm_grid: str) -> tuple[float, ...]:
     if rhythm_grid == "quarter_kick_grid":
         return (0.0, 1.0, 2.0, 3.0)
+    if rhythm_grid == "eighth_hat_grid":
+        return (0.0, 1.5, 2.5, 3.5)
     if rhythm_grid == "triplet_hat_grid":
         return (0.0, 2.5)
     if rhythm_grid == "swing_sixteenth_grid":
@@ -477,6 +568,8 @@ def _snare_beats_for_grid(rhythm_grid: str) -> tuple[float, ...]:
 
 
 def _hat_beats_for_grid(rhythm_grid: str) -> tuple[float, ...]:
+    if rhythm_grid == "eighth_hat_grid":
+        return tuple(step * 0.25 for step in range(16))
     if rhythm_grid == "triplet_hat_grid":
         return tuple(round(step / 3, 6) for step in range(12))
     if rhythm_grid == "swing_sixteenth_grid":
@@ -509,6 +602,14 @@ def _clamp_midi(pitch: int) -> int:
 
 def _clamp_velocity(velocity: int) -> int:
     return max(1, min(127, velocity))
+
+
+def _arrangement_notes_per_bar(density: str) -> int:
+    if density == "sparse":
+        return 4
+    if density == "dense":
+        return 12
+    return 8
 
 
 def _tempo_track(tempo_bpm: int, time_signature: TimeSignature) -> bytes:

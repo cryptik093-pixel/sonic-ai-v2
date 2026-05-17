@@ -5,6 +5,7 @@ from dataclasses import dataclass
 from typing import Literal
 
 from app.audio.midi_generation import (
+    ArrangementConfig,
     BasslineConfig,
     ChordProgressionConfig,
     DrumPatternConfig,
@@ -14,7 +15,7 @@ from app.audio.midi_generation import (
     render_to_midi,
 )
 
-PatternType = Literal["melody", "bassline", "chords", "drums"]
+PatternType = Literal["melody", "bassline", "chords", "drums", "arrangement"]
 Density = Literal["sparse", "medium", "dense"]
 Complexity = Literal["simple", "moderate", "complex"]
 EngineScale = Literal["major", "minor", "dorian", "phrygian", "lydian", "mixolydian", "locrian"]
@@ -78,6 +79,7 @@ MODE_KEYWORDS = {
 }
 
 PATTERN_KEYWORDS: tuple[tuple[PatternType, tuple[str, ...]], ...] = (
+    ("arrangement", ("full beat", "complete beat", "full song", "arrangement", "starter track")),
     ("drums", ("drum", "drums", "beat", "808 hats", "hi hat", "hi-hat")),
     ("bassline", ("bassline", "bass line", "bass", "808")),
     ("chords", ("chords", "chord", "progression", "pad", "pads")),
@@ -174,7 +176,13 @@ class PromptMidiPlan:
     """
 
     parsed: ParsedPrompt
-    engine_config: MelodyConfig | BasslineConfig | ChordProgressionConfig | DrumPatternConfig
+    engine_config: (
+        MelodyConfig
+        | BasslineConfig
+        | ChordProgressionConfig
+        | DrumPatternConfig
+        | ArrangementConfig
+    )
     rhythm_grid: str
     contour_rule: str
     chord_degrees: tuple[int, ...]
@@ -272,7 +280,19 @@ def build_midi_plan(parsed: ParsedPrompt) -> PromptMidiPlan:
     contour_rule = _contour_rule_for(parsed)
     chord_degrees = _chord_degrees_for(parsed)
 
-    if parsed.pattern_type == "drums":
+    if parsed.pattern_type == "arrangement":
+        engine_config = ArrangementConfig(
+            tempo_bpm=parsed.tempo_bpm,
+            bars=max(2, bars * 2),
+            root_pitch=_root_pitch(parsed, base_octave=60),
+            scale=parsed.engine_scale,
+            density=parsed.density,
+            velocity=velocity,
+            rhythm_grid=rhythm_grid,
+            contour_rule=contour_rule,
+            chord_degrees=chord_degrees,
+        )
+    elif parsed.pattern_type == "drums":
         engine_config = DrumPatternConfig(
             tempo_bpm=parsed.tempo_bpm,
             bars=max(1, min(4, bars)),
@@ -336,16 +356,21 @@ def generate_prompt_midi(prompt: str, *, seed: int | None = None) -> PromptMidiR
     plan = build_midi_plan(parsed)
     engine = MIDIEngine()
 
-    if parsed.pattern_type == "drums":
+    if parsed.pattern_type == "arrangement":
+        tracks = engine.generate_arrangement(plan.engine_config, seed=seed)
+    elif parsed.pattern_type == "drums":
         track = engine.generate_drum_pattern(plan.engine_config, seed=seed)
+        tracks = (track,)
     elif parsed.pattern_type == "bassline":
         track = engine.generate_bassline(plan.engine_config, seed=seed)
+        tracks = (track,)
     elif parsed.pattern_type == "chords":
         track = engine.generate_chord_progression(plan.engine_config, seed=seed)
+        tracks = (track,)
     else:
         track = engine.generate_melody(plan.engine_config, seed=seed)
+        tracks = (track,)
 
-    tracks = (track,)
     return PromptMidiResult(plan=plan, tracks=tracks, midi_bytes=render_to_midi(tracks))
 
 
@@ -404,6 +429,11 @@ def _parse_moods(prompt: str) -> tuple[str, ...]:
 
 
 def _find_pattern_type(prompt: str) -> PatternType:
+    if (
+        (_contains_keyword(prompt, "complete") or _contains_keyword(prompt, "full"))
+        and _contains_keyword(prompt, "beat")
+    ) or _contains_keyword(prompt, "song"):
+        return "arrangement"
     for pattern_type, keywords in PATTERN_KEYWORDS:
         if any(_contains_keyword(prompt, keyword) for keyword in keywords):
             return pattern_type

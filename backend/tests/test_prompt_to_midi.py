@@ -1,4 +1,5 @@
 from app.audio.midi_generation import (
+    ArrangementConfig,
     BasslineConfig,
     ChordProgressionConfig,
     DrumPatternConfig,
@@ -173,3 +174,16 @@ def test_unsupported_keywords_are_ignored_safely() -> None:
     assert parsed.tempo_bpm == 120
     assert parsed.rhythm_style == "none"
     assert isinstance(plan.engine_config, MelodyConfig)
+
+
+def test_full_beat_prompt_generates_multi_track_arrangement() -> None:
+    parsed = parse_prompt("complete trap beat at 140 bpm in D minor")
+    plan = build_midi_plan(parsed)
+    result = generate_prompt_midi("complete trap beat at 140 bpm in D minor", seed=5)
+
+    assert parsed.pattern_type == "arrangement"
+    assert parsed.rhythm_style == "trap"
+    assert isinstance(plan.engine_config, ArrangementConfig)
+    assert plan.engine_config.rhythm_grid == "eighth_hat_grid"
+    assert [track.role for track in result.tracks] == ["melody", "bass", "chords", "drums"]
+    assert result.midi_bytes.count(b"MTrk") == 5

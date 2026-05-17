@@ -27,6 +27,11 @@ dev = [
   "pytest>=8.2.0,<9.0.0",
   "ruff>=0.4.0,<0.5.0",
 ]
+music-lab = [
+  "muspy>=0.5.0,<0.6.0",
+  "pydub>=0.25.1,<0.26.0",
+  "scamp>=0.9.5,<0.10.0",
+]
 
 [tool.setuptools.packages.find]
 where = ["."]

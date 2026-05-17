@@ -286,15 +286,16 @@ def map_features_to_tracks(
     tracks: list[Track] = []
 
     melody_notes = _melody_notes(pitch_events, beat_duration, root_pc, scale, length_beats)
-    tracks.append(
-        Track(
-            name="Extracted Melody",
-            role="melody",
-            patterns=(Pattern(melody_notes, tempo_bpm=tempo_bpm, length_beats=length_beats),),
-        )
-    )
-
     drum_notes = _drum_notes(drum_onsets, beat_duration, length_beats)
+    if melody_notes:
+        tracks.append(
+            Track(
+                name="Extracted Melody",
+                role="melody",
+                patterns=(Pattern(melody_notes, tempo_bpm=tempo_bpm, length_beats=length_beats),),
+            )
+        )
+
     if drum_notes:
         tracks.append(
             Track(
@@ -304,10 +305,20 @@ def map_features_to_tracks(
             )
         )
 
-    if include_bass and pitch_events:
+    has_musical_source = bool(pitch_events or drum_notes)
+    if include_bass and has_musical_source:
         tracks.append(_bass_track(root_pc, tempo_bpm, length_beats))
-    if include_chords and pitch_events:
+    if include_chords and has_musical_source:
         tracks.append(_chord_track(root_pc, scale, tempo_bpm, length_beats))
+
+    if not tracks:
+        tracks.append(
+            Track(
+                name="Extracted Silence Guide",
+                role="melody",
+                patterns=(Pattern((), tempo_bpm=tempo_bpm, length_beats=length_beats),),
+            )
+        )
 
     return tuple(tracks)
 

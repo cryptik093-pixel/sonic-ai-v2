@@ -1,4 +1,5 @@
 from app.audio.midi_generation import (
+    ArrangementConfig,
     DrumPatternConfig,
     MelodyConfig,
     MIDIEngine,
@@ -92,6 +93,20 @@ def test_drum_pattern_supports_drill_triplet_hat_grid() -> None:
     assert notes_by_pitch[38] == [1.5, 3.0]
     assert notes_by_pitch[42][:4] == [0.0, 0.333333, 0.666667, 1.0]
     assert len(notes_by_pitch[42]) == 12
+
+
+def test_drum_pattern_supports_trap_sixteenth_hat_grid() -> None:
+    engine = MIDIEngine()
+
+    track = engine.generate_drum_pattern(
+        DrumPatternConfig(tempo_bpm=140, bars=1, rhythm_grid="eighth_hat_grid")
+    )
+    notes_by_pitch = _starts_by_pitch(track.patterns[0].ordered_notes)
+
+    assert notes_by_pitch[36] == [0.0, 1.5, 2.5, 3.5]
+    assert notes_by_pitch[38] == [1.0, 3.0]
+    assert notes_by_pitch[42][:5] == [0.0, 0.25, 0.5, 0.75, 1.0]
+    assert len(notes_by_pitch[42]) == 16
 
 
 def test_melody_contour_and_rhythm_grid_change_generated_phrase() -> None:
@@ -272,6 +287,29 @@ def test_render_to_midi_returns_structurally_valid_midi() -> None:
     assert len(midi_bytes) > 32
     assert midi_bytes.startswith(b"MThd")
     assert midi_bytes.count(b"MTrk") == 3
+
+
+def test_arrangement_generation_returns_full_daw_ready_track_stack() -> None:
+    engine = MIDIEngine()
+    config = ArrangementConfig(
+        tempo_bpm=140,
+        bars=2,
+        root_pitch=62,
+        scale="minor",
+        density="dense",
+        rhythm_grid="eighth_hat_grid",
+        contour_rule="low_narrow_minor_contour",
+    )
+
+    first = engine.generate_arrangement(config, seed=21)
+    second = engine.generate_arrangement(config, seed=21)
+    midi_bytes = render_to_midi(first)
+
+    assert first == second
+    assert [track.role for track in first] == ["melody", "bass", "chords", "drums"]
+    assert all(track.patterns[0].ordered_notes for track in first)
+    assert midi_bytes.startswith(b"MThd")
+    assert midi_bytes.count(b"MTrk") == 5
 
 
 def _starts_by_pitch(notes: tuple[Note, ...]) -> dict[int, list[float]]:

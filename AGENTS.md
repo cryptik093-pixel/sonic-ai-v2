@@ -2,7 +2,7 @@
 
 This repository must be treated as a professional audio-engineering SaaS codebase.
 
-Treat Sonic AI V2 as a clean rebuild. Do not reuse Sonic AI V1 assumptions, files, shortcuts, or broken patterns.
+Treat Sonic AI V2 as the sole product target in this repository. Do not import legacy assumptions, files, shortcuts, or broken patterns from older Sonic AI repositories.
 
 Prioritize:
 

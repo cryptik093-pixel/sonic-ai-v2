@@ -1,0 +1,33 @@
+
+> sonic-ai-v2-frontend@0.1.0 dev
+> next dev --hostname 127.0.0.1 --port 3000
+
+▲ Next.js 16.2.6 (Turbopack)
+- Local:         http://127.0.0.1:3000
+- Network:       http://127.0.0.1:3000
+- Environments: .env.local
+✓ Ready in 8.1s
+Creating turbopack project {
+  dir: 'C:\\Users\\david someone\\Desktop\\sonic_ai_v2\\sonic_ai_v2\\frontend',
+  testMode: true
+}
+
+○ Compiling / ...
+ GET / 200 in 62s (next.js: 56s, application-code: 6.5s)
+✓ Finished writing to filesystem cache in 11.4s
+ GET / 200 in 647ms (next.js: 26ms, application-code: 621ms)
+ GET / 200 in 433ms (next.js: 26ms, application-code: 407ms)
+○ Compiling /midi ...
+ GET /midi 200 in 4.2s (next.js: 3.6s, application-code: 587ms)
+ GET /dashboard 200 in 3.0s (next.js: 2.7s, application-code: 347ms)
+ GET / 200 in 1768ms (next.js: 915ms, application-code: 853ms)
+ GET / 200 in 1820ms (next.js: 88ms, application-code: 1732ms)
+ GET /midi 200 in 808ms (next.js: 101ms, application-code: 706ms)
+ GET /midi 200 in 13.1s (next.js: 5.2s, application-code: 7.9s)
+✓ Compiled in 55.5s
+✓ Finished writing to filesystem cache in 23.9s
+✓ Compiled in 1067ms
+✓ Finished writing to filesystem cache in 13.3s
+✓ Finished writing to filesystem cache in 10.6s
+✓ Finished filesystem cache database compaction in 22.8s
+✓ Finished writing to filesystem cache in 10.2s
