@@ -1,0 +1,16 @@
+services:
+  - type: web
+    name: sonic-ai-v2-api
+    env: python
+    rootDir: backend
+    buildCommand: python -m pip install --upgrade pip && pip install -e .
+    startCommand: gunicorn -k uvicorn.workers.UvicornWorker app.main:app -b 0.0.0.0:$PORT
+    plan: starter
+    healthCheckPath: /health
+    envVars:
+      - key: SONIC_AI_ENVIRONMENT
+        value: production
+      - key: SONIC_AI_CORS_ORIGINS
+        sync: false
+      - key: SONIC_AI_MAX_UPLOAD_BYTES
+        value: "209715200"

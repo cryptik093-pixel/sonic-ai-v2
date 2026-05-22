@@ -1,79 +1,53 @@
-# Sonic AI — AGENTS.md
+# Sonic AI V2 Prime Engineering Directive
 
-## Mission
-Stabilize Sonic AI as an analyzer-first public web app.
+This repository must be treated as a professional audio-engineering SaaS codebase.
 
-Required V1 flow:
-1. User uploads audio
-2. Backend analyzes audio
-3. User receives a deterministic, grounded production report
+Treat Sonic AI V2 as a clean rebuild. Do not reuse Sonic AI V1 assumptions, files, shortcuts, or broken patterns.
 
-## V1 scope lock
-IN SCOPE:
-- Flask app only
-- upload endpoint
-- analyze/status endpoint
-- normalized analysis payload
-- deterministic production/mix/master guidance generated only from measured findings
-- basic UI that matches real backend routes
-- local smoke test
-- public deployment config
+Prioritize:
 
-OUT OF SCOPE:
-- auth
-- credits
-- user history
-- generation/export
-- live capture
-- MIDI monitoring
-- FastAPI/RQ
-- any feature not required for upload -> analyze -> report
+1. Deterministic analysis
+2. API contract stability
+3. Test-backed changes
+4. Backend reliability
+5. Real DSP/audio-engineering correctness
+6. Producer usefulness
+7. Production-readiness
 
-## Canonical files
-- backend/app_factory.py
-- backend/services/analysis.py
-- backend/jobs.py
-- backend/config.py
-- templates/prototype.html
-- validation/test_backend_analysis_contract.py
+Do not add fake AI behavior, random output, placeholder intelligence, broad rewrites, unnecessary dependencies, or public API changes unless explicitly instructed.
 
-## Rules
-- Read the canonical files first before editing.
-- Do not invent routes, payload fields, or UI states.
-- Do not create duplicate analyzer logic.
-- Do not add new frameworks.
-- Do not change scope.
-- Do not claim something works unless verified by command output or tests.
-- If uncertain, preserve working behavior and reduce risk.
+Every code change must be verifiable.
 
-## Output grounding rules
-Every recommendation in the report must be tied to measured or derived findings.
-Never hallucinate plugin chains or fixes.
-If confidence is low, say so explicitly.
-Use "insufficient evidence" instead of guessing.
+## Required Workflow
 
-Each report section must map to:
-- finding
-- why it matters
-- recommended action
-- caution
+1. Read `docs/SONIC_AI_V2_SPEC.md` before coding.
+2. Make one focused change at a time.
+3. Prefer small, stable, testable files over large files.
+4. Run the relevant tests for every code change.
+5. Summarize changed files and verification results at the end of each task.
 
-## Definition of done
-Done means all of the following are true:
-- health endpoint returns 200
-- upload returns a valid job id and status
-- analyze polling transitions correctly through pending/running/succeeded/failed
-- successful analysis returns normalized JSON
-- production report is deterministic and grounded in findings
-- repeated requests do not loop endlessly
-- same file hash reuses cached result when applicable
-- prototype UI reflects actual backend routes and states
-- app can be started locally with one documented command
-- app has a production entrypoint for 
+## Engineering Rules
 
-## Required work style
-1. Inspect
-2. Plan
-3. Implement the smallest safe changes
-4. Verify
-5. Summarize exact file edits and exact commands run
+- Backend uses Python 3.12, FastAPI, Uvicorn, Pydantic, NumPy, SciPy, SoundFile, Librosa, and pyloudnorm.
+- Frontend uses Vite, React, TypeScript, and a Tailwind-ready structure when initialized.
+- Build deterministic DSP analysis first.
+- Do not make fake AI claims.
+- Do not add random output without an explicit seed and deterministic tests.
+- Do not add placeholder business logic that pretends to analyze audio.
+- Every API response must be JSON unless the endpoint is explicitly documented as a binary media endpoint.
+- Every major module must be testable.
+- Prioritize producer usefulness, engineering truthfulness, deterministic output quality, DAW readiness, workflow speed, and premium stability.
+
+## API Rules
+
+- Preserve the documented API contract in `docs/API_CONTRACT.md`.
+- Version public routes under `/api/v2`.
+- Return structured error and status payloads instead of plain text.
+- Keep request and response models explicit with Pydantic.
+
+## Testing Rules
+
+- Add or update tests with behavior changes.
+- Keep tests deterministic.
+- Do not rely on network access in tests.
+- Audio analysis tests should use generated signals or committed tiny fixtures only.

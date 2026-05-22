@@ -1,400 +1,136 @@
-# 🎵 Sonic AI - Audio Analysis Platform
+# Sonic AI V2
 
-Complete AI-powered music analysis system with Shopify integration, user authentication, and freemium model.
+Sonic AI V2 is a clean rebuild of a professional audio analysis SaaS for music producers, engineers, and artists.
 
-## Features
+The current backend can run deterministic DSP analysis, expose a prompt-to-MIDI API, and provide local CLI tools for MIDI workflows. The frontend is a Vite/React core product loop for uploading audio and reviewing the deterministic engineering report dashboard.
 
-✅ **10-Stage Audio Analysis Pipeline**
-- Musical key detection (Krumhansl-Schmuckler algorithm)
-- Tempo/BPM detection (autocorrelation)
-- Chord recognition (template matching)
-- Spectral balance analysis (low/mid/high)
-- LUFS loudness metering (ITU-R BS.1770-4)
-- Harmonic complexity measurement
-- Melodic contour detection
-- Pitch distribution analysis
-- Mix reference classification
-- Spectral peak identification
+## Repository Layout
 
-✅ **User System**
-- Registration & login
-- Usage tracking (2 free analyses/day)
-- Analysis history storage
-- Premium upgrade path
-
-✅ **Shopify Integration**
-- Automatic product recommendations
-- Tempo/Key matching
-- Genre-aware suggestions
-- Direct links to your store
-
-✅ **Web Dashboard**
-- Modern, responsive UI
-- Real-time analysis results
-- Beautiful data visualizations
-- Product recommendations
-
----
-
-## 🚀 Quick Start
-
-### 1. Clone or Navigate to Project
-```bash
-cd mkdir_sonic_ai
+```text
+sonic_ai_v2/
+  backend/   FastAPI backend and deterministic audio analysis modules
+  frontend/  Vite React TypeScript upload/analyze/report dashboard
+  docs/      Product, API, and build documentation
 ```
 
-### 2. Activate Virtual Environment
+## Windows PowerShell Setup
+
+From the repository root:
+
 ```powershell
-.\venv\Scripts\Activate.ps1
+cd backend
+py -3.12 -m venv .venv
+.\.venv\Scripts\Activate.ps1
+python -m pip install --upgrade pip
+python -m pip install -e ".[dev]"
+pytest
 ```
 
-### 3. Install Dependencies
-```bash
-pip install -r requirements.txt
-```
+Python 3.13 also works with the current dependency set, but Python 3.12 is the documented backend target.
 
-### 4. Configure Shopify (Optional)
-Edit `.env`:
-```
-SHOPIFY_CLIENT_ID=your_id
-SHOPIFY_CLIENT_SECRET=your_secret
-SHOPIFY_ACCESS_TOKEN=your_token
-```
+## Run The Backend API
 
-### 5. Run the Web App
-```bash
-python sonic_app.py
-```
-
-### 6. Open Browser
-Visit: **http://localhost:5000**
-
-### Separate Pyramid Ambient App
-Run:
-```bash
-python pyramid_listening_app.py
-```
-
-Open: **http://localhost:5050**
-
-This standalone app listens to environmental audio, accepts simple sensor values,
-and generates a phrase plus melody blueprint shaped toward a King's Chamber-inspired
-acoustic profile.
-
----
-
-## 📁 Project Structure
-
-```
-mkdir_sonic_ai/
-├── sonic_app.py              # Flask web app (main entry point)
-├── unified_analyzer.py        # 10-stage audio analysis engine
-├── products.py               # Shopify integration & recommendations
-├── sonic_cli.py              # Command-line batch processor
-├── sonic_api.py              # REST API (alternative to web app)
-├── requirements.txt          # Python dependencies
-├── .env                      # Configuration (credentials)
-├── .env.example             # Configuration template
-├── DEPLOYMENT.md            # Production deployment guide
-├── templates/
-│   └── index.html           # Web dashboard UI
-├── sonic_ai.db              # SQLite database (auto-created)
-└── venv/                    # Virtual environment
-```
-
----
-
-## 🔧 Core Components
-
-### unified_analyzer.py
-Main analysis engine processing audio through 10 stages:
-
-```python
-analyzer = SonicAnalyzer()
-results = analyzer.analyze(record=False, filepath='beat.wav')
-# Returns 10 metrics as JSON
-```
-
-**Output JSON:**
-```json
-{
-  "key": "G Minor",
-  "key_confidence": 0.87,
-  "tempo": 120,
-  "tempo_confidence": 0.88,
-  "chord": "Gm7",
-  "chord_confidence": 0.95,
-  "mix_balance": {"low": 35, "mid": 45, "high": 20},
-  "mix_reference": "hiphop",
-  "lufs": -14.2,
-  "loudness_category": "loud",
-  "harmonic_complexity": 0.82,
-  "melodic_contour": "stable",
-  "pitch_distribution": [0.1, 0.2, 0.15, ...],
-  "spectral_peaks": [98.5, 196.3, 294.2]
-}
-```
-
-### sonic_app.py
-Flask web server with authentication and analysis endpoint:
-
-```python
-# Routes:
-GET  /                    # Web dashboard
-POST /register           # Create account
-POST /login              # Sign in
-POST /logout             # Sign out
-POST /api/analyze        # Upload and analyze
-GET  /api/history        # Analysis history
-GET  /api/products       # Shopify catalog
-POST /api/recommendations # Get product recs
-```
-
-### products.py
-Matches analyzed audio to your Shopify products:
-
-```python
-get_recommendations(key='G Minor', tempo=120, mix_profile='hiphop')
-# Returns top 5 matching products with relevance scores
-```
-
----
-
-## 💰 Freemium Model
-
-**Free Tier:**
-- 2 analyses per day
-- View results
-- See product recommendations
-- Access analysis history
-
-**Premium Tier (Stripe):**
-- Unlimited analyses
-- Detailed insights
-- Priority support
-- API access
-
-Implement with:
-```python
-# In sonic_app.py
-@app.route('/api/upgrade')
-def upgrade():
-    # Stripe payment flow
-    pass
-```
-
----
-
-## 🛍️ Shopify Setup
-
-1. **Get OAuth Credentials:**
-   - https://www.omega-house.net/admin/apps-and-sales-channels/development
-   - Create custom app with `read_products` scope
-
-2. **Add Products to System:**
-   - Edit `products.py` `PRODUCTS` dictionary
-   - Include: name, price, BPM range, keys, genres, URL
-
-3. **Recommendations Automatically Trigger:**
-   - User uploads beat
-   - AI analyzes (detects Key: G Minor, Tempo: 120 BPM)
-   - System recommends matching products
-   - User clicks → buys from your store
-
----
-
-## 🌐 Deployment Options
-
-### Local Development
-```bash
-python sonic_app.py
-```
-Runs on http://localhost:5000
-
-### Production (Heroku)
-```bash
-heroku create your-app
-git push heroku main
-heroku config:set SHOPIFY_CLIENT_ID=xxx
-```
-
-### Production (Docker)
-```bash
-docker build -t sonic-ai .
-docker run -p 5000:5000 sonic_ai
-```
-
-See **DEPLOYMENT.md** for full production setup.
-
----
-
-## 📊 Analytics & Metrics
-
-Track:
-- User registrations
-- Analyses completed
-- Product click-throughs
-- Conversion rate (analysis → purchase)
-
-Add Google Analytics to `index.html` for full tracking.
-
----
-
-## 🔐 Security
-
-**Important:**
-- Change `SECRET_KEY` in `.env`
-- Rotate Shopify credentials regularly
-- Use HTTPS in production
-- Never commit `.env` to Git
-
-**Add rate limiting:**
-```python
-from flask_limiter import Limiter
-limiter = Limiter(app, key_func=lambda: session.get('user_id'))
-
-@app.route('/api/analyze')
-@limiter.limit("10/hour")
-def analyze():
-    pass
-```
-
----
-
-## 🧪 Testing
-
-### Test Analyzer Locally
-```bash
-python test_unified_analyzer.py
-```
-
-### Test API
-```bash
-python sonic_api.py
-# In another terminal:
-curl -X POST -F "file=@test.wav" http://localhost:5000/analyze
-```
-
-### Test CLI Tool
-```bash
-python sonic_cli.py test_audio.wav --output-dir results/
-```
-
----
-
-## 🎯 Roadmap
-
-**Phase 1 (Done):**
-- ✅ Audio analysis engine (10 metrics)
-- ✅ Web dashboard
-- ✅ User authentication
-- ✅ Shopify integration
-
-**Phase 2 (Next):**
-- 🔄 Stripe payment integration
-- 🔄 Email confirmation
-- 🔄 Advanced analytics dashboard
-- 🔄 Mix comparison feature
-
-**Phase 3 (Future):**
-- DAW plugin wrapper
-- Mobile app
-- API for third-party developers
-- Automated mastering recommendations
-
----
-
-## 🐛 Troubleshooting
-
-**Port 5000 in use?**
 ```powershell
-netstat -ano | findstr :5000
-taskkill /PID <PID> /F
+cd backend
+.\.venv\Scripts\Activate.ps1
+uvicorn app.main:app --reload
 ```
 
-**Database error?**
-```bash
-rm sonic_ai.db
-python sonic_app.py
+Health check:
+
+```powershell
+Invoke-RestMethod http://127.0.0.1:8000/health
 ```
 
-**Shopify API not working?**
-- Verify `.env` has correct credentials
-- Check app is installed on omega-house.net
-- Restart Flask app
+Create a deterministic test WAV:
 
-**Audio file not analyzing?**
-- Ensure file is WAV or MP3
-- Check file is not corrupted
-- Try test file: `test_unified_analyzer.py`
-
----
-
-## 📚 API Reference
-
-### Upload & Analyze
-```bash
-curl -X POST \
-  -F "file=@beat.wav" \
-  -H "Cookie: session=..." \
-  http://localhost:5000/api/analyze
+```powershell
+python -m app.cli make-test-audio --output .\outputs\test_mix.wav
 ```
 
-**Response:**
-```json
-{
-  "analysis": {...},
-  "remaining_analyses": 1
-}
+Analyze that WAV through the API:
+
+```powershell
+curl.exe -X POST `
+  -F "file=@.\outputs\test_mix.wav" `
+  -F "target_profile=streaming_balanced" `
+  http://127.0.0.1:8000/api/v2/analyze
 ```
 
-### Get Recommendations
-```bash
-curl -X POST \
-  -H "Content-Type: application/json" \
-  -d '{"key":"G Minor","tempo":120,"mix_profile":"hiphop"}' \
-  http://localhost:5000/api/recommendations
+Analyze your own audio file by replacing `.\outputs\test_mix.wav` with a `.wav`, `.flac`, `.aiff`, `.mp3`, or `.ogg` path.
+
+Generate deterministic MIDI through the public API:
+
+```powershell
+curl.exe -X POST `
+  -H "Content-Type: application/json" `
+  -H "Accept: application/json" `
+  -d "{\"prompt\":\"dark trap melody at 140 bpm in D minor\",\"seed\":12}" `
+  http://127.0.0.1:8000/api/v2/prompt-midi
 ```
 
-**Response:**
-```json
-{
-  "recommendations": [
-    {
-      "name": "808 Essentials",
-      "price": "$29.99",
-      "reason": "Perfect for 120 BPM • Great for hiphop",
-      "url": "..."
-    }
-  ]
-}
+Omit `Accept: application/json` to receive the default `audio/midi` response.
+
+## Run The Frontend
+
+Start the backend first, then run the frontend dev server from a second PowerShell window:
+
+```powershell
+cd frontend
+npm install
+npm run dev
 ```
 
----
+The Vite dev server proxies `/api` requests to `http://127.0.0.1:8000`.
 
-## 📞 Support
+## Local CLI Workflow
 
-Issues? Check:
-1. `.env` file has all required variables
-2. Dependencies installed: `pip install -r requirements.txt`
-3. Virtual environment activated
-4. Port 5000 not in use
-5. Database not corrupted
+The CLI is the fastest way to test Sonic AI V2 without the frontend.
 
----
+Analyze an audio file and save the JSON report:
 
-## 📄 License
+```powershell
+python -m app.cli analyze `
+  --input ".\outputs\test_mix.wav" `
+  --profile streaming_balanced `
+  --json-out ".\outputs\analysis_report.json"
+```
 
-This project was created for **Omega House** (www.omega-house.net).
+Generate deterministic prompt MIDI:
 
----
+```powershell
+python -m app.cli prompt-midi `
+  --prompt "dark trap melody at 140 bpm in D minor" `
+  --seed 7 `
+  --output ".\outputs\dark_trap_melody.mid" `
+  --json-out ".\outputs\dark_trap_melody.json"
+```
 
-## 🎉 You're Ready!
+Extract MIDI from an audio file:
 
-1. Start the app: `python sonic_app.py`
-2. Visit: http://localhost:5000
-3. Sign up, upload audio, get recommendations
-4. Deploy to production when ready
-5. Watch the sales come in from your products! 🚀
+```powershell
+python -m app.cli audio-to-midi `
+  --input ".\outputs\test_mix.wav" `
+  --output ".\outputs\extracted_from_audio.mid" `
+  --json-out ".\outputs\extracted_from_audio.json"
+```
 
-Questions? Check `DEPLOYMENT.md` for advanced setup.
+Run quality checks:
+
+```powershell
+pytest
+ruff check app tests
+```
+
+Frontend quality checks:
+
+```powershell
+cd frontend
+npm run test
+npm run lint
+npm run build
+```
+
+## Current Phase
+
+Sonic AI V2 is still engine-first. The public API exposes health, deterministic audio analysis, and the documented prompt-to-MIDI route. The current frontend covers the core upload -> analyze -> engineering report workflow; account, billing, history, and export workflows are intentionally out of scope.
