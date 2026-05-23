@@ -3,7 +3,8 @@ import logging
 
 from fastapi.testclient import TestClient
 
-from app.core.logging import JSONFormatter
+from app.api import routes_generation, routes_master
+from app.core.logging import JSONFormatter, get_logger
 from app.main import create_app
 
 
@@ -106,3 +107,23 @@ def test_json_formatter_includes_structured_context() -> None:
     assert payload["method"] == "GET"
     assert payload["status_code"] == 200
     assert payload["timestamp"].endswith("Z")
+
+
+def test_get_logger_installs_json_formatter_once() -> None:
+    logger = get_logger("sonic.test.observability.get_logger")
+    same_logger = get_logger("sonic.test.observability.get_logger")
+
+    assert same_logger is logger
+    assert logger.level == logging.INFO
+    assert logger.propagate is False
+    assert len(logger.handlers) == 1
+    assert isinstance(logger.handlers[0].formatter, JSONFormatter)
+
+
+def test_route_loggers_use_structured_formatter() -> None:
+    for route_logger in (routes_generation.logger, routes_master.logger):
+        assert route_logger.propagate is False
+        assert any(
+            isinstance(handler.formatter, JSONFormatter)
+            for handler in route_logger.handlers
+        )

@@ -1,5 +1,4 @@
 import base64
-import logging
 from dataclasses import dataclass
 from io import BytesIO
 from typing import Annotated, Literal
@@ -13,11 +12,12 @@ from app.audio.prompt_to_midi import (
     interpret_prompt,
     parse_prompt,
 )
+from app.core.logging import get_logger
 from app.schemas.midi_generation import MidiData, PromptMeta, PromptMIDIResponse
 
 router = APIRouter(tags=["generation"])
 
-logger = logging.getLogger(__name__)
+logger = get_logger(__name__)
 
 
 def _empty_prompt_response() -> JSONResponse:
@@ -247,7 +247,7 @@ async def _read_prompt_midi_request(
 
 @router.post(
     "/prompt-midi",
-    response_model=None,
+    response_model=PromptMIDIResponse,
     openapi_extra=_PROMPT_MIDI_REQUEST_BODY,
 )
 async def prompt_midi(

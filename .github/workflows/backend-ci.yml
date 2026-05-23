@@ -1,0 +1,45 @@
+name: Backend CI
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  backend-tests:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Cache pip
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/pip
+          key: backend-pip-${{ runner.os }}-${{ hashFiles('backend/pyproject.toml', 'backend/requirements*.txt') }}
+          restore-keys: |
+            backend-pip-${{ runner.os }}-
+
+      - name: Install backend dev dependencies
+        working-directory: backend
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -e ".[dev]"
+
+      - name: Lint backend (ruff)
+        working-directory: backend
+        run: |
+          python -m ruff check app tests
+
+      - name: Run backend tests (pytest)
+        working-directory: backend
+        run: |
+          python -m pytest -q

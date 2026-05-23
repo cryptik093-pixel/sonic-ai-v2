@@ -1,15 +1,12 @@
 from fastapi import APIRouter
 
 from app.core.config import get_settings
+from app.schemas.health import HealthResponse
 
 router = APIRouter(tags=["health"])
 
 
-@router.get("/health")
-def health() -> dict[str, str]:
+@router.get("/health", response_model=HealthResponse)
+def health() -> HealthResponse:
     settings = get_settings()
-    return {
-        "status": "ok",
-        "service": settings.service_name,
-        "version": settings.version,
-    }
+    return HealthResponse(status="ok", service=settings.service_name, version=settings.version)
