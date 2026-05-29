@@ -1,0 +1,5 @@
+node_modules/
+.next/
+web/
+dist/
+.DS_Store

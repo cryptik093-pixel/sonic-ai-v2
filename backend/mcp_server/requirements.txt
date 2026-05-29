@@ -1,0 +1,10 @@
+fastapi>=0.95
+uvicorn[standard]>=0.22
+mcp>=0.1.0
+soundfile>=0.12
+numpy>=1.26
+scipy>=1.11
+pyloudnorm>=0.2
+librosa>=0.10
+mido>=1.2
+pytest>=8.0

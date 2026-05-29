@@ -7,6 +7,8 @@ from app.api.routes_analyze import router as analyze_router
 from app.api.routes_generation import router as generation_router
 from app.api.routes_health import router as health_router
 from app.api.routes_master import router as master_router
+from app.api.routes_flagship import router as flagship_router
+from app.api.routes_agents import router as agents_router
 from app.core.config import get_settings
 from app.middleware.error_handler import (
     http_error_handler,
@@ -40,6 +42,8 @@ def create_app() -> FastAPI:
     app.include_router(analyze_router, prefix="/api/v2")
     app.include_router(generation_router, prefix="/api/v2")
     app.include_router(master_router, prefix="/api/v2")
+    app.include_router(flagship_router, prefix="/api/v2")
+    app.include_router(agents_router, prefix="/api/v2")
     return app
 
 

@@ -1,0 +1,23 @@
+{
+	"hooks": {
+		"SessionStart": [
+			{
+				"type": "command",
+				"command": ""
+			}
+		],
+		"PreToolUse": [
+			{
+				"type": "command",
+				"command": ""
+			}
+		],
+		"ErrorOccurred": [
+			{
+				"type": "command",
+				"command": "
+		"
+			}
+		]
+	}
+}

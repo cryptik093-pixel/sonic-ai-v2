@@ -1,0 +1,19 @@
+{
+  "created_at": "20260529T013542Z",
+  "items": [
+    {
+      "filename": "sonic_ai_flagship_0_string_0.mid",
+      "path": "string\\20260529T013542Z\\sonic_ai_flagship_0_string_0.mid",
+      "bytes_length": 217,
+      "prompt": "string",
+      "seed": 0,
+      "tempo_bpm": 120,
+      "key": "C",
+      "mode": "minor",
+      "pattern_type": "melody",
+      "tracks": [
+        "Generated Melody"
+      ]
+    }
+  ]
+}
