@@ -1,5 +1,7 @@
 # Vercel (frontend) + Render (backend) deployment
 
+> Deprecated: the supported production target is now Railway for the backend and Vercel for the frontend. Use `docs/deploy/RAILWAY_VERCEL.md` unless you intentionally need the legacy Render path.
+
 Overview
 - Frontend: Vercel serves `omega-house.online` (apex) and `www.omega-house.online`.
 - Backend: Render hosts the API at `api.omega-house.online` (via CNAME to Render service).
