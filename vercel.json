@@ -5,6 +5,14 @@
   "outputDirectory": "frontend/dist",
   "rewrites": [
     {
+      "source": "/api/:path*",
+      "destination": "https://api.omega-house.online/api/:path*"
+    },
+    {
+      "source": "/health",
+      "destination": "https://api.omega-house.online/health"
+    },
+    {
       "source": "/(.*)",
       "destination": "/index.html"
     }

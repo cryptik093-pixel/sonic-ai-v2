@@ -83,6 +83,10 @@ npm run dev
 
 The Vite dev server proxies `/api` requests to `http://127.0.0.1:8000`.
 
+## Production Deployment
+
+Use Railway for the FastAPI backend and Vercel for the static frontend. Keep `api.omega-house.online` on Railway, and alias only `omega-house.online` / `www.omega-house.online` to Vercel. See `DEPLOYMENT.md` and `docs/deploy/RAILWAY_VERCEL.md`.
+
 ## Local CLI Workflow
 
 The CLI is the fastest way to test Sonic AI V2 without the frontend.

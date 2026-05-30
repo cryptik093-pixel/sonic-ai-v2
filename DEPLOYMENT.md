@@ -1,5 +1,9 @@
 # Sonic AI V2 Deployment
 
+## Current Production Target
+
+Deploy Sonic AI V2 as two services: the FastAPI backend on Railway using `railway.json` and the root `Dockerfile`, and the Vite frontend on Vercel using `vercel.json`. Keep `api.omega-house.online` pointed at Railway; only alias `omega-house.online` and `www.omega-house.online` to Vercel. Do not deploy the Python DSP backend as a Vercel Serverless Function. See `docs/deploy/RAILWAY_VERCEL.md` for the Railway + Vercel checklist.
+
 ## Stack Summary
 
 Sonic AI V2 is a full-stack repository:
@@ -11,9 +15,9 @@ Sonic AI V2 is a full-stack repository:
 
 ## Recommended Deployment Target
 
-Deploy the backend to Render and the frontend to Vercel.
+Deploy the backend to Railway and the frontend to Vercel.
 
-This is the most practical path for the current repo because the backend has Python DSP dependencies and file uploads, while the frontend is a static Vite build. Keep them as two deploys and connect them with `VITE_API_BASE_URL` plus backend CORS.
+This is the most practical path for the current repo because the backend has Python DSP dependencies and file uploads, while the frontend is a static Vite build. Keep them as two deploys and connect them with `VITE_API_BASE_URL` plus backend CORS. Do not alias the API domain to Vercel.
 
 ## Required Environment Variables
 
@@ -24,16 +28,16 @@ SONIC_AI_APP_NAME="Sonic AI V2 API"
 SONIC_AI_SERVICE_NAME="sonic-ai-v2-backend"
 SONIC_AI_VERSION="0.1.0"
 SONIC_AI_ENVIRONMENT="production"
-SONIC_AI_CORS_ORIGINS="https://your-frontend.example.com,http://localhost:5173,http://127.0.0.1:5173"
+SONIC_AI_CORS_ORIGINS="https://omega-house.online,https://www.omega-house.online,http://localhost:5173,http://127.0.0.1:5173"
 SONIC_AI_MAX_UPLOAD_MB="200"
-# Optional exact-byte override:
-# SONIC_AI_MAX_UPLOAD_BYTES="209715200"
+# Exact-byte Railway/container upload limit:
+SONIC_AI_MAX_UPLOAD_BYTES="209715200"
 ```
 
 Frontend:
 
 ```bash
-VITE_API_BASE_URL="https://your-backend.example.com"
+VITE_API_BASE_URL="https://api.omega-house.online"
 ```
 
 Do not commit real secrets. This repo does not currently require secrets for the deterministic analysis API.
@@ -86,7 +90,7 @@ python -m uvicorn app.main:app --host 0.0.0.0 --port ${PORT:-8000}
 ## Health Check URL
 
 ```text
-https://your-backend.example.com/health
+https://api.omega-house.online/health
 ```
 
 Expected response:
@@ -97,16 +101,15 @@ Expected response:
 
 ## Deploy Steps
 
-### Backend on Render
+### Backend on Railway
 
-Use `deploy/render.yaml` or configure manually:
+Use `railway.json` from the repository root:
 
-- Root directory: `backend`
-- Build command: `python -m pip install --upgrade pip && pip install -e .`
-- Start command: `python -m uvicorn app.main:app --host 0.0.0.0 --port $PORT`
+- Builder: root `Dockerfile`
+- Start command: `python -m uvicorn app.main:app --host 0.0.0.0 --port ${PORT:-8000}`
 - Health check path: `/health`
-- Set `SONIC_AI_CORS_ORIGINS` to the deployed frontend origin.
-- Set `SONIC_AI_MAX_UPLOAD_MB=200`.
+- Set `SONIC_AI_CORS_ORIGINS` to the deployed Vercel origins.
+- Set `SONIC_AI_MAX_UPLOAD_BYTES=209715200`.
 
 ### Frontend on Vercel
 
@@ -115,10 +118,10 @@ Use the root `vercel.json`.
 Set:
 
 ```bash
-VITE_API_BASE_URL=https://your-render-backend.example.com
+VITE_API_BASE_URL=https://api.omega-house.online
 ```
 
-Then deploy from the repository root. The configured build command runs `cd frontend && npm ci && npm run build`, and Vercel serves `frontend/dist`.
+Then deploy from the repository root. The configured build command runs `npm --prefix frontend ci` and `npm --prefix frontend run build`, and Vercel serves `frontend/dist`.
 
 ### Container Backend
 
@@ -132,7 +135,7 @@ docker run --rm -p 8000:8000 --env-file .env sonic-ai-v2-backend
 ## Common Failure Fixes
 
 - `ModuleNotFoundError: app`: run the backend start command from `backend/`, or use the provided Dockerfile.
-- `CORS error in browser`: add the deployed frontend origin to `SONIC_AI_CORS_ORIGINS`.
+- `CORS error in browser`: add the deployed Vercel frontend origins to `SONIC_AI_CORS_ORIGINS`.
 - `413 file_too_large`: increase `SONIC_AI_MAX_UPLOAD_MB` deliberately, or upload a smaller supported audio file.
-- Frontend calls the wrong backend: set `VITE_API_BASE_URL` before running `npm run build`.
-- Render build cannot find requirements: this repo uses `backend/pyproject.toml`; use `pip install -e .`.
+- Frontend calls the wrong backend: set `VITE_API_BASE_URL=https://api.omega-house.online` before running `npm run build`.
+- Python package install cannot find requirements: this repo uses `backend/pyproject.toml`; use `pip install -e .`.
